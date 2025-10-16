@@ -99,27 +99,38 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
 
-    // Animation parameters based on category and mood
+    // Animation parameters based on category, mood, and playlist energy
     let particles: Particle[] = [];
     let animationId: number;
     
+    // Get playlist energy multiplier
+    const getPlaylistEnergyMultiplier = () => {
+      const playlist = mockPlaylists.find(p => p.id === selectedPlaylist);
+      if (!playlist) return 1;
+      // Map energy (0-100) to speed multiplier (0.3-2.5)
+      return 0.3 + (playlist.averageEnergy / 100) * 2.2;
+    };
+    
     const getMoodModifier = (mood: EmotionType | null) => {
-      if (!mood) return { speedMultiplier: 1, sizeMultiplier: 1, opacityBoost: 0, baseColor: null };
+      const energyMultiplier = getPlaylistEnergyMultiplier();
+      
+      if (!mood) return { speedMultiplier: energyMultiplier, sizeMultiplier: 1, opacityBoost: 0, baseColor: null };
       
       const emotion = emotions.find(e => e.id === mood);
-      if (!emotion) return { speedMultiplier: 1, sizeMultiplier: 1, opacityBoost: 0, baseColor: null };
+      if (!emotion) return { speedMultiplier: energyMultiplier, sizeMultiplier: 1, opacityBoost: 0, baseColor: null };
       
+      // Combine mood and playlist energy
       switch (mood) {
         case 'happy':
-          return { speedMultiplier: 1.3, sizeMultiplier: 1.1, opacityBoost: 0.1, baseColor: emotion.color };
+          return { speedMultiplier: 1.3 * energyMultiplier, sizeMultiplier: 1.1, opacityBoost: 0.1, baseColor: emotion.color };
         case 'neutral':
-          return { speedMultiplier: 0.8, sizeMultiplier: 1, opacityBoost: 0, baseColor: emotion.color };
+          return { speedMultiplier: 0.8 * energyMultiplier, sizeMultiplier: 1, opacityBoost: 0, baseColor: emotion.color };
         case 'sad':
-          return { speedMultiplier: 0.5, sizeMultiplier: 0.9, opacityBoost: -0.1, baseColor: emotion.color };
+          return { speedMultiplier: 0.5 * energyMultiplier, sizeMultiplier: 0.9, opacityBoost: -0.1, baseColor: emotion.color };
         case 'angry':
-          return { speedMultiplier: 2, sizeMultiplier: 0.8, opacityBoost: 0.15, baseColor: emotion.color };
+          return { speedMultiplier: 2 * energyMultiplier, sizeMultiplier: 0.8, opacityBoost: 0.15, baseColor: emotion.color };
         case 'love':
-          return { speedMultiplier: 1.2, sizeMultiplier: 1.2, opacityBoost: 0.2, baseColor: emotion.color };
+          return { speedMultiplier: 1.2 * energyMultiplier, sizeMultiplier: 1.2, opacityBoost: 0.2, baseColor: emotion.color };
       }
     };
 
@@ -315,7 +326,7 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
       canvas.removeEventListener('moodBurst' as any, handleBurstEvent as any);
       cancelAnimationFrame(animationId);
     };
-  }, [category, isPlaying, selectedMood]);
+  }, [category, isPlaying, selectedMood, selectedPlaylist]);
 
   // Periodic reminder effect
   useEffect(() => {
@@ -336,7 +347,6 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
   const handleMoodSelect = (mood: EmotionType) => {
     setSelectedMood(mood);
     moodRef.current = mood;
-    setShowOverlay(false);
     
     // Save mood entry for current stage
     const newEntry: MoodEntry = {
@@ -345,8 +355,6 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
       timestamp: new Date()
     };
     setMoodEntries(prev => [...prev.filter(e => e.stage !== currentStage), newEntry]);
-    
-    setShowConfirmation(true);
     
     // Trigger burst effect
     const canvas = canvasRef.current;
@@ -363,14 +371,13 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
       }
     }
     
-    setTimeout(() => {
-      setShowConfirmation(false);
-      setShowSubmitPrompt(true);
-    }, 2000);
+    // Keep overlay open for continuous interaction
+    setShowConfirmation(true);
+    setTimeout(() => setShowConfirmation(false), 1500);
   };
 
   const handleContinue = () => {
-    setShowSubmitPrompt(false);
+    setShowOverlay(false);
     
     // Move to next stage
     if (currentStage === 'before') {
@@ -404,7 +411,7 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
       description: `${playlist?.name} mood journey saved to your journal`,
     });
     
-    setShowSubmitPrompt(false);
+    setShowOverlay(false);
     setShowSaveConfirmation(true);
     
     setTimeout(() => {
@@ -419,11 +426,11 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
 
   const handleClose = () => {
     setShowOverlay(false);
-    setShowSubmitPrompt(false);
   };
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!showOverlay && !showConfirmation) {
+    // Always allow clicking to open overlay for continuous interaction
+    if (!showConfirmation && !showSaveConfirmation) {
       setShowOverlay(true);
     }
   };
@@ -469,8 +476,6 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
           </div>
         </div>
       )}
-      
-      {/* Emotion Selection Overlay */}
       {showOverlay && (
         <div 
           className="absolute inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center animate-fade-in z-10"
@@ -531,87 +536,29 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
                 </Button>
               ))}
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Submit Prompt */}
-      {showSubmitPrompt && (
-        <div 
-          className="absolute inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center animate-fade-in z-10"
-        >
-          <div 
-            className="bg-background/95 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-white/10 max-w-md mx-4 animate-scale-in relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 h-8 w-8"
-              onClick={handleClose}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-            <div className="text-center space-y-4">
-              <div className={`text-5xl mb-4 ${emotions.find(e => e.id === selectedMood)?.animation}`}>
-                {emotions.find(e => e.id === selectedMood)?.emoji}
-              </div>
-              <h3 className="text-lg font-medium text-foreground">
-                {emotions.find(e => e.id === selectedMood)?.label}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {mockPlaylists.find(p => p.id === selectedPlaylist)?.name}
-              </p>
-
-              {/* Mood journey progress */}
-              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                {moodEntries.map((entry) => (
-                  <div key={entry.stage} className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground capitalize">{entry.stage}:</span>
-                    <span className="flex items-center gap-2">
-                      {emotions.find(e => e.id === entry.emotion)?.emoji}
-                      <span className="text-foreground">{emotions.find(e => e.id === entry.emotion)?.label}</span>
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                {currentStage !== 'after' ? (
-                  <>
+            
+            {/* Continue/Save buttons in overlay */}
+            <div className="mt-6 space-y-3">
+              {moodEntries.some(e => e.stage === currentStage) && (
+                <>
+                  {currentStage !== 'after' ? (
                     <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={handleClose}
-                    >
-                      Continue Listening
-                    </Button>
-                    <Button
-                      className="flex-1"
+                      className="w-full"
                       onClick={handleContinue}
                     >
                       Next Stage
                     </Button>
-                  </>
-                ) : (
-                  <>
+                  ) : (
                     <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={handleClose}
-                    >
-                      Close
-                    </Button>
-                    <Button
-                      className="flex-1 gap-2"
+                      className="w-full gap-2"
                       onClick={handleSaveToJournal}
                     >
                       <Save className="w-4 h-4" />
                       Save Journey
                     </Button>
-                  </>
-                )}
-              </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -650,7 +597,7 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
         {category === 'scenic' && '🌄 Scenic'}
       </div>
 
-      {selectedMood && !showOverlay && !showConfirmation && !showSubmitPrompt && !showSaveConfirmation && (
+      {selectedMood && !showOverlay && !showConfirmation && !showSaveConfirmation && (
         <div className="absolute top-4 right-4 text-white/80 text-sm font-medium bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-2">
           <span className={`text-base ${emotions.find(e => e.id === selectedMood)?.animation}`}>
             {emotions.find(e => e.id === selectedMood)?.emoji}
