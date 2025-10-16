@@ -1,43 +1,53 @@
-import { MapPin, Navigation, BookOpen } from 'lucide-react';
+import { BookOpen, Map, Globe, Notebook } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ModeToggleProps {
-  mode: 'campus' | 'currentLocation' | 'journal';
-  onModeChange: (mode: 'campus' | 'currentLocation' | 'journal') => void;
+  mode: 'campus' | 'nationwide' | 'global' | 'journal';
+  onModeChange: (mode: 'campus' | 'nationwide' | 'global' | 'journal') => void;
 }
 
 const ModeToggle = ({ mode, onModeChange }: ModeToggleProps) => {
   return (
-    <div className="fixed bottom-24 left-4 z-30 bg-background border border-border rounded-full shadow-lg p-1 flex gap-1">
+    <div className="fixed bottom-24 left-4 z-30 bg-background border border-border rounded-lg shadow-lg p-2 flex flex-col gap-2">
       <Button
         variant={mode === 'campus' ? 'default' : 'ghost'}
         size="sm"
         onClick={() => onModeChange('campus')}
-        className="rounded-full min-h-[44px] min-w-[44px]"
-        aria-label="Campus map view"
+        className="justify-start min-h-[44px] w-full"
+        aria-label="University campus map view"
       >
-        <MapPin className="w-5 h-5" />
-        <span className="ml-2 hidden sm:inline">Campus</span>
+        <BookOpen className="w-5 h-5 mr-2" />
+        <span className="text-sm">University Campus</span>
       </Button>
       <Button
-        variant={mode === 'currentLocation' ? 'default' : 'ghost'}
+        variant={mode === 'nationwide' ? 'default' : 'ghost'}
         size="sm"
-        onClick={() => onModeChange('currentLocation')}
-        className="rounded-full min-h-[44px] min-w-[44px]"
-        aria-label="Current location view"
+        onClick={() => onModeChange('nationwide')}
+        className="justify-start min-h-[44px] w-full"
+        aria-label="Nationwide map view"
       >
-        <Navigation className="w-5 h-5" />
-        <span className="ml-2 hidden sm:inline">Near Me</span>
+        <Map className="w-5 h-5 mr-2" />
+        <span className="text-sm">Leeuwarden/NL</span>
+      </Button>
+      <Button
+        variant={mode === 'global' ? 'default' : 'ghost'}
+        size="sm"
+        onClick={() => onModeChange('global')}
+        className="justify-start min-h-[44px] w-full"
+        aria-label="Global map view"
+      >
+        <Globe className="w-5 h-5 mr-2" />
+        <span className="text-sm">Global</span>
       </Button>
       <Button
         variant={mode === 'journal' ? 'default' : 'ghost'}
         size="sm"
         onClick={() => onModeChange('journal')}
-        className="rounded-full min-h-[44px] min-w-[44px]"
+        className="justify-start min-h-[44px] w-full"
         aria-label="Journal view"
       >
-        <BookOpen className="w-5 h-5" />
-        <span className="ml-2 hidden sm:inline">Journal</span>
+        <Notebook className="w-5 h-5 mr-2" />
+        <span className="text-sm">Journal</span>
       </Button>
     </div>
   );

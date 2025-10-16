@@ -7,16 +7,16 @@ import SpotDetailsModal from './SpotDetailsModal';
 interface MapViewProps {
   selectedCategory: string | null;
   onCategoryChange: (category: string | null) => void;
-  mapMode: 'campus' | 'currentLocation';
+  mapMode: 'campus' | 'nationwide' | 'global';
 }
 
 const MapView = ({ selectedCategory, onCategoryChange, mapMode }: MapViewProps) => {
   const [selectedSpot, setSelectedSpot] = useState<Spot | null>(null);
   const [userLocationSpots, setUserLocationSpots] = useState<Spot[]>([]);
 
-  // Generate spots based on user location
+  // Generate spots based on user location for nationwide and global modes
   useEffect(() => {
-    if (mapMode === 'currentLocation') {
+    if (mapMode === 'nationwide' || mapMode === 'global') {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((position) => {
           const { latitude, longitude } = position.coords;
@@ -100,7 +100,7 @@ const MapView = ({ selectedCategory, onCategoryChange, mapMode }: MapViewProps) 
     }
   }, [mapMode]);
 
-  const displaySpots = mapMode === 'currentLocation' ? userLocationSpots : spots;
+  const displaySpots = (mapMode === 'nationwide' || mapMode === 'global') ? userLocationSpots : spots;
   
   const filteredSpots = selectedCategory
     ? displaySpots.filter(spot => spot.category === selectedCategory)

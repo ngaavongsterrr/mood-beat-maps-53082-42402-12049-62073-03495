@@ -4,7 +4,7 @@ import JournalView from '@/components/JournalView';
 import ModeToggle from '@/components/ModeToggle';
 
 const Index = () => {
-  const [mode, setMode] = useState<'campus' | 'currentLocation' | 'journal'>('campus');
+  const [mode, setMode] = useState<'campus' | 'nationwide' | 'global' | 'journal'>('campus');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   return (
