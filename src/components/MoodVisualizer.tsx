@@ -11,7 +11,7 @@ interface MoodVisualizerProps {
   isPlaying?: boolean;
 }
 
-type EmotionType = 'happy' | 'neutral' | 'sad' | 'angry' | 'love' | 'excited' | 'disappointed' | 'curious';
+type EmotionType = 'love' | 'happy' | 'content' | 'disappointed' | 'sad' | 'angry' | 'neutral' | 'curious';
 type MoodStage = 'before' | 'during' | 'after';
 
 interface MoodEntry {
@@ -21,69 +21,80 @@ interface MoodEntry {
 }
 
 const emotions = [
+  // Positive spectrum (green) - intensity order: most to least
+  { 
+    id: 'love' as EmotionType, 
+    emoji: '😍', 
+    label: 'Love', 
+    color: 'hsl(142, 76%, 36%)', // Deep green - highest intensity
+    spectrum: 'positive',
+    intensity: 3,
+    animation: 'animate-bounce-gentle'
+  },
   { 
     id: 'happy' as EmotionType, 
-    emoji: '😊', 
+    emoji: '😄', 
     label: 'Happy', 
-    color: 'hsl(var(--emotion-positive))', 
-    positive: true,
+    color: 'hsl(142, 71%, 45%)', // Medium green
+    spectrum: 'positive',
+    intensity: 2,
     animation: 'animate-bounce-gentle'
   },
   { 
-    id: 'excited' as EmotionType, 
-    emoji: '😁', 
-    label: 'Excited', 
-    color: 'hsl(var(--emotion-positive))', 
-    positive: true,
+    id: 'content' as EmotionType, 
+    emoji: '😊', 
+    label: 'Content', 
+    color: 'hsl(142, 65%, 55%)', // Light green - lowest intensity
+    spectrum: 'positive',
+    intensity: 1,
     animation: 'animate-bounce-gentle'
   },
+  // Negative spectrum (red) - intensity order: most to least
   { 
-    id: 'neutral' as EmotionType, 
-    emoji: '😐', 
-    label: 'Neutral', 
-    color: 'hsl(var(--emotion-neutral))', 
-    positive: false,
-    animation: 'animate-pulse-steady'
+    id: 'disappointed' as EmotionType, 
+    emoji: '☹️', 
+    label: 'Disappointed', 
+    color: 'hsl(0, 84%, 60%)', // Bright red - highest intensity
+    spectrum: 'negative',
+    intensity: 3,
+    animation: 'animate-shake-fast'
   },
   { 
     id: 'sad' as EmotionType, 
     emoji: '😢', 
     label: 'Sad', 
-    color: 'hsl(220, 60%, 40%)', 
-    positive: false,
+    color: 'hsl(0, 70%, 50%)', // Medium red
+    spectrum: 'negative',
+    intensity: 2,
     animation: 'animate-sway-slow'
-  },
-  { 
-    id: 'disappointed' as EmotionType, 
-    emoji: '☹️', 
-    label: 'Disappointed', 
-    color: 'hsl(var(--emotion-negative))', 
-    positive: false,
-    animation: 'animate-shake-fast'
   },
   { 
     id: 'angry' as EmotionType, 
     emoji: '😡', 
     label: 'Angry', 
-    color: 'hsl(var(--emotion-negative))', 
-    positive: false,
+    color: 'hsl(0, 60%, 40%)', // Dark red - lowest intensity
+    spectrum: 'negative',
+    intensity: 1,
     animation: 'animate-shake-fast'
   },
+  // Neutral/Indifferent spectrum - intensity order: most to least
   { 
-    id: 'love' as EmotionType, 
-    emoji: '😍', 
-    label: 'Love', 
-    color: 'hsl(var(--emotion-love))', 
-    positive: true,
-    animation: 'animate-glow-warm'
+    id: 'neutral' as EmotionType, 
+    emoji: '😐', 
+    label: 'Neutral', 
+    color: 'hsl(210, 10%, 60%)', // Neutral gray - highest intensity
+    spectrum: 'neutral',
+    intensity: 2,
+    animation: 'animate-pulse-steady'
   },
   { 
     id: 'curious' as EmotionType, 
     emoji: '🧐', 
     label: 'Curious', 
-    color: 'hsl(var(--emotion-love))', 
-    positive: true,
-    animation: 'animate-glow-warm'
+    color: 'hsl(210, 8%, 50%)', // Darker neutral - lowest intensity
+    spectrum: 'neutral',
+    intensity: 1,
+    animation: 'animate-pulse-steady'
   },
 ];
 
@@ -133,17 +144,33 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
       const emotion = emotions.find(e => e.id === mood);
       if (!emotion) return { speedMultiplier: 1, sizeMultiplier: 1, opacityBoost: 0, baseColor: null };
       
-      switch (mood) {
-        case 'happy':
-          return { speedMultiplier: 1.3, sizeMultiplier: 1.1, opacityBoost: 0.1, baseColor: emotion.color };
-        case 'neutral':
-          return { speedMultiplier: 0.8, sizeMultiplier: 1, opacityBoost: 0, baseColor: emotion.color };
-        case 'sad':
-          return { speedMultiplier: 0.5, sizeMultiplier: 0.9, opacityBoost: -0.1, baseColor: emotion.color };
-        case 'angry':
-          return { speedMultiplier: 2, sizeMultiplier: 0.8, opacityBoost: 0.15, baseColor: emotion.color };
-        case 'love':
-          return { speedMultiplier: 1.2, sizeMultiplier: 1.2, opacityBoost: 0.2, baseColor: emotion.color };
+      // Calculate modifiers based on emotion spectrum and intensity
+      const intensityFactor = emotion.intensity / 3; // Normalize to 0-1
+      
+      if (emotion.spectrum === 'positive') {
+        // Positive emotions: faster, larger, brighter
+        return { 
+          speedMultiplier: 1 + (intensityFactor * 0.5), 
+          sizeMultiplier: 1 + (intensityFactor * 0.3), 
+          opacityBoost: intensityFactor * 0.2, 
+          baseColor: emotion.color 
+        };
+      } else if (emotion.spectrum === 'negative') {
+        // Negative emotions: more erratic or slower
+        return { 
+          speedMultiplier: emotion.id === 'angry' ? 2 : 0.5 + (intensityFactor * 0.3), 
+          sizeMultiplier: 0.9 + (intensityFactor * 0.2), 
+          opacityBoost: intensityFactor * 0.1, 
+          baseColor: emotion.color 
+        };
+      } else {
+        // Neutral emotions: steady, moderate
+        return { 
+          speedMultiplier: 0.7 + (intensityFactor * 0.2), 
+          sizeMultiplier: 1, 
+          opacityBoost: 0, 
+          baseColor: emotion.color 
+        };
       }
     };
 
@@ -340,6 +367,11 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
       cancelAnimationFrame(animationId);
     };
   }, [category, isPlaying, selectedMood]);
+
+  // Regenerate particles when mood changes to update colors
+  useEffect(() => {
+    moodRef.current = selectedMood;
+  }, [selectedMood]);
 
   // Periodic reminder effect
   useEffect(() => {
@@ -545,13 +577,14 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
                   variant="outline"
                   className="flex flex-col items-center gap-2 h-auto py-6 hover:scale-110 transition-all border-white/20 bg-background/50 hover:bg-background/80 relative group"
                   style={{ 
-                    borderColor: emotion.positive ? 'hsl(var(--emotion-positive) / 0.3)' : 'hsl(var(--emotion-negative) / 0.3)'
+                    borderColor: `${emotion.color.replace(')', ' / 0.3)')}`
                   }}
                   onClick={() => handleMoodSelect(emotion.id)}
                 >
                   <span className={`text-4xl ${emotion.animation}`}>
                     {emotion.emoji}
                   </span>
+                  <span className="text-xs text-muted-foreground">{emotion.label}</span>
                 </Button>
               ))}
             </div>
