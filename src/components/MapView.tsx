@@ -21,12 +21,12 @@ const MapView = ({ selectedCategory, onCategoryChange, mapMode }: MapViewProps) 
         navigator.geolocation.getCurrentPosition((position) => {
           const { latitude, longitude } = position.coords;
           
-          // Generate 2 nearby spots with same design/functionality as campus spots
+          // Generate 3 nearby spots (one per category) with realistic location names
           const generatedSpots: Spot[] = [
             {
               id: 'nearby-1',
-              name: 'Nearby Park',
-              description: 'A peaceful outdoor spot near your location, perfect for relaxation.',
+              name: 'Community Park',
+              description: 'A tranquil green space perfect for quiet reflection and peaceful relaxation.',
               category: 'peaceful',
               latitude: latitude + 0.002,
               longitude: longitude + 0.002,
@@ -48,8 +48,31 @@ const MapView = ({ selectedCategory, onCategoryChange, mapMode }: MapViewProps) 
             },
             {
               id: 'nearby-2',
-              name: 'Local Viewpoint',
-              description: 'A scenic location nearby with great views and fresh air.',
+              name: 'Town Square Cafe',
+              description: 'A vibrant gathering spot with outdoor seating, ideal for socializing and connecting.',
+              category: 'social',
+              latitude: latitude - 0.001,
+              longitude: longitude + 0.001,
+              image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&auto=format&fit=crop',
+              playlists: [
+                {
+                  id: 'p3',
+                  name: 'Coffee Shop Vibes',
+                  spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DX4pUKG1kS0Ac',
+                  category: 'social'
+                },
+                {
+                  id: 'p4',
+                  name: 'Social Gathering',
+                  spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DWSf2RDTDayIx',
+                  category: 'social'
+                }
+              ]
+            },
+            {
+              id: 'nearby-3',
+              name: 'Scenic Overlook',
+              description: 'A picturesque viewpoint offering stunning panoramic views and fresh air.',
               category: 'scenic',
               latitude: latitude - 0.002,
               longitude: longitude - 0.002,
