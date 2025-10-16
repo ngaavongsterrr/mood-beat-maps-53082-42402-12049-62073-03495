@@ -201,6 +201,34 @@ export const mockPlaylists: Playlist[] = [
     averageEnergy: 68,
     dominantMood: 'happy',
   },
+  {
+    id: 'p9',
+    name: 'Epic Views',
+    songs: mockSongs.filter(s => s.energy > 60 && s.energy < 80),
+    averageEnergy: 70,
+    dominantMood: 'energetic',
+  },
+  {
+    id: 'p10',
+    name: 'Adventure Time',
+    songs: mockSongs.filter(s => s.energy > 80),
+    averageEnergy: 88,
+    dominantMood: 'intense',
+  },
+  {
+    id: 'p11',
+    name: 'Garden Serenity',
+    songs: mockSongs.filter(s => s.energy < 25 && s.mood === 'calm'),
+    averageEnergy: 18,
+    dominantMood: 'calm',
+  },
+  {
+    id: 'p12',
+    name: 'Nature Sounds',
+    songs: mockSongs.filter(s => s.energy < 20),
+    averageEnergy: 15,
+    dominantMood: 'calm',
+  },
 ];
 
 export const getMoodColor = (mood: string): string => {

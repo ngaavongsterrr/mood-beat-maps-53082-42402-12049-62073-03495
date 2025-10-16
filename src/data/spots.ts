@@ -43,6 +43,98 @@ export const spots: Spot[] = [
     ]
   },
   {
+    id: '1a',
+    name: 'Rengerspark',
+    description: 'Beautiful park near NHL Stenden campus, perfect for studying outdoors or peaceful walks.',
+    category: 'peaceful',
+    latitude: 53.2028,
+    longitude: 5.7835,
+    image: 'https://images.unsplash.com/photo-1519003300449-424ad0405076?w=800&auto=format&fit=crop',
+    playlists: [
+      {
+        id: 'p1',
+        name: 'Garden Serenity',
+        spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DX4PP3DA4J0N8',
+        category: 'peaceful'
+      },
+      {
+        id: 'p2',
+        name: 'Nature Sounds',
+        spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DWZd79rJ6a7lp',
+        category: 'peaceful'
+      }
+    ]
+  },
+  {
+    id: '1b',
+    name: 'Bruze Cafe Benches',
+    description: 'Cozy outdoor seating area near Bruze cafe, great spot for socializing with coffee.',
+    category: 'social',
+    latitude: 53.2022,
+    longitude: 5.7830,
+    image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&auto=format&fit=crop',
+    playlists: [
+      {
+        id: 'p3',
+        name: 'Coffee Shop Vibes',
+        spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DX4pUKG1kS0Ac',
+        category: 'social'
+      },
+      {
+        id: 'p4',
+        name: 'Social Gathering',
+        spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DWSf2RDTDayIx',
+        category: 'social'
+      }
+    ]
+  },
+  {
+    id: '1c',
+    name: 'Windmill Building Garden',
+    description: 'Scenic spot with windmill views, ideal for contemplative breaks between classes.',
+    category: 'scenic',
+    latitude: 53.2034,
+    longitude: 5.7842,
+    image: 'https://images.unsplash.com/photo-1509048191080-d2984bad6ae5?w=800&auto=format&fit=crop',
+    playlists: [
+      {
+        id: 'p5',
+        name: 'Epic Views',
+        spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DX4sWSpwq3LiO',
+        category: 'scenic'
+      },
+      {
+        id: 'p6',
+        name: 'Adventure Time',
+        spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DWZeKCadgRdKQ',
+        category: 'scenic'
+      }
+    ]
+  },
+  {
+    id: '1d',
+    name: 'NHL Campus Courtyard',
+    description: 'Central quad with benches and sitting areas, perfect for group study or relaxing.',
+    category: 'social',
+    latitude: 53.2025,
+    longitude: 5.7838,
+    image: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&auto=format&fit=crop',
+    playlists: [
+      {
+        id: 'p3',
+        name: 'Coffee Shop Vibes',
+        spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DX4pUKG1kS0Ac',
+        category: 'social'
+      },
+      {
+        id: 'p4',
+        name: 'Social Gathering',
+        spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DWSf2RDTDayIx',
+        category: 'social'
+      }
+    ]
+  },
+  {
     id: '2',
     name: 'Blokhuispoort',
     description: 'Historic former prison transformed into a vibrant cultural hub with cafes and events.',

@@ -4,22 +4,23 @@ import JournalView from '@/components/JournalView';
 import ModeToggle from '@/components/ModeToggle';
 
 const Index = () => {
-  const [mode, setMode] = useState<'map' | 'journal'>('map');
+  const [mode, setMode] = useState<'campus' | 'currentLocation' | 'journal'>('campus');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   return (
     <div className="h-screen w-full overflow-hidden">
       {/* Main Content */}
       <div className="h-full w-full">
-        {mode === 'map' ? (
-          <MapView 
+        {mode === 'journal' ? (
+          <JournalView 
             selectedCategory={selectedCategory}
             onCategoryChange={setSelectedCategory}
           />
         ) : (
-          <JournalView 
+          <MapView 
             selectedCategory={selectedCategory}
             onCategoryChange={setSelectedCategory}
+            mapMode={mode}
           />
         )}
       </div>

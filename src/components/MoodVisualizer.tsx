@@ -11,7 +11,7 @@ interface MoodVisualizerProps {
   isPlaying?: boolean;
 }
 
-type EmotionType = 'happy' | 'neutral' | 'sad' | 'angry' | 'love';
+type EmotionType = 'happy' | 'neutral' | 'sad' | 'angry' | 'love' | 'excited' | 'disappointed' | 'curious';
 type MoodStage = 'before' | 'during' | 'after';
 
 interface MoodEntry {
@@ -25,6 +25,14 @@ const emotions = [
     id: 'happy' as EmotionType, 
     emoji: '😊', 
     label: 'Happy', 
+    color: 'hsl(var(--emotion-positive))', 
+    positive: true,
+    animation: 'animate-bounce-gentle'
+  },
+  { 
+    id: 'excited' as EmotionType, 
+    emoji: '😁', 
+    label: 'Excited', 
     color: 'hsl(var(--emotion-positive))', 
     positive: true,
     animation: 'animate-bounce-gentle'
@@ -46,6 +54,14 @@ const emotions = [
     animation: 'animate-sway-slow'
   },
   { 
+    id: 'disappointed' as EmotionType, 
+    emoji: '☹️', 
+    label: 'Disappointed', 
+    color: 'hsl(var(--emotion-negative))', 
+    positive: false,
+    animation: 'animate-shake-fast'
+  },
+  { 
     id: 'angry' as EmotionType, 
     emoji: '😡', 
     label: 'Angry', 
@@ -57,6 +73,14 @@ const emotions = [
     id: 'love' as EmotionType, 
     emoji: '😍', 
     label: 'Love', 
+    color: 'hsl(var(--emotion-love))', 
+    positive: true,
+    animation: 'animate-glow-warm'
+  },
+  { 
+    id: 'curious' as EmotionType, 
+    emoji: '🧐', 
+    label: 'Curious', 
     color: 'hsl(var(--emotion-love))', 
     positive: true,
     animation: 'animate-glow-warm'
@@ -476,7 +500,7 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
           className="absolute inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center animate-fade-in z-10"
         >
           <div 
-            className="bg-background/95 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-white/10 max-w-sm mx-4 animate-scale-in relative"
+            className="bg-background/95 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-white/10 max-w-md mx-4 animate-scale-in relative"
             onClick={(e) => e.stopPropagation()}
           >
             <Button
@@ -514,7 +538,7 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
             <h3 className="text-lg font-medium text-center mb-6 text-foreground">
               {stagePrompts[currentStage]}
             </h3>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-3">
               {emotions.map((emotion) => (
                 <Button
                   key={emotion.id}

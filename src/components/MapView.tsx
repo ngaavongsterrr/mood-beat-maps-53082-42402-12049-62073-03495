@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MapPin } from 'lucide-react';
 import { spots, getCategoryColor, type Spot } from '@/data/spots';
 import FilterBar from './FilterBar';
@@ -7,14 +7,81 @@ import SpotDetailsModal from './SpotDetailsModal';
 interface MapViewProps {
   selectedCategory: string | null;
   onCategoryChange: (category: string | null) => void;
+  mapMode: 'campus' | 'currentLocation';
 }
 
-const MapView = ({ selectedCategory, onCategoryChange }: MapViewProps) => {
+const MapView = ({ selectedCategory, onCategoryChange, mapMode }: MapViewProps) => {
   const [selectedSpot, setSelectedSpot] = useState<Spot | null>(null);
+  const [userLocationSpots, setUserLocationSpots] = useState<Spot[]>([]);
 
+  // Generate spots based on user location
+  useEffect(() => {
+    if (mapMode === 'currentLocation') {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          const { latitude, longitude } = position.coords;
+          
+          // Generate 2 nearby spots with same design/functionality as campus spots
+          const generatedSpots: Spot[] = [
+            {
+              id: 'nearby-1',
+              name: 'Nearby Park',
+              description: 'A peaceful outdoor spot near your location, perfect for relaxation.',
+              category: 'peaceful',
+              latitude: latitude + 0.002,
+              longitude: longitude + 0.002,
+              image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&auto=format&fit=crop',
+              playlists: [
+                {
+                  id: 'p1',
+                  name: 'Garden Serenity',
+                  spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DX4PP3DA4J0N8',
+                  category: 'peaceful'
+                },
+                {
+                  id: 'p2',
+                  name: 'Nature Sounds',
+                  spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DWZd79rJ6a7lp',
+                  category: 'peaceful'
+                }
+              ]
+            },
+            {
+              id: 'nearby-2',
+              name: 'Local Viewpoint',
+              description: 'A scenic location nearby with great views and fresh air.',
+              category: 'scenic',
+              latitude: latitude - 0.002,
+              longitude: longitude - 0.002,
+              image: 'https://images.unsplash.com/photo-1509048191080-d2984bad6ae5?w=800&auto=format&fit=crop',
+              playlists: [
+                {
+                  id: 'p5',
+                  name: 'Epic Views',
+                  spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DX4sWSpwq3LiO',
+                  category: 'scenic'
+                },
+                {
+                  id: 'p6',
+                  name: 'Adventure Time',
+                  spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DWZeKCadgRdKQ',
+                  category: 'scenic'
+                }
+              ]
+            }
+          ];
+          
+          setUserLocationSpots(generatedSpots);
+        });
+      }
+    }
+  }, [mapMode]);
+
+  const displaySpots = mapMode === 'currentLocation' ? userLocationSpots : spots;
+  
   const filteredSpots = selectedCategory
-    ? spots.filter(spot => spot.category === selectedCategory)
-    : spots;
+    ? displaySpots.filter(spot => spot.category === selectedCategory)
+    : displaySpots;
 
   return (
     <div className="relative h-full w-full">
