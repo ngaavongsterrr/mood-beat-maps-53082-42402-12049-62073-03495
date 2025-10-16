@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Music, Sparkles } from 'lucide-react';
+import { X, Music, Sparkles, Navigation } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +20,21 @@ const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
     : spot.playlists;
 
   const categories: SpotCategory[] = ['peaceful', 'social', 'scenic'];
+
+  const handleNavigate = () => {
+    const { latitude, longitude } = spot;
+    
+    // Detect if user is on iOS device
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    
+    // Create appropriate map URL
+    const mapUrl = isIOS
+      ? `http://maps.apple.com/?daddr=${latitude},${longitude}`
+      : `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+    
+    // Open in new tab
+    window.open(mapUrl, '_blank');
+  };
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
@@ -56,6 +71,16 @@ const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
               {spot.description}
             </p>
           </DialogHeader>
+
+          {/* Navigation Button */}
+          <Button 
+            onClick={handleNavigate}
+            className="w-full gap-2"
+            size="lg"
+          >
+            <Navigation className="w-5 h-5" />
+            Navigate to Location
+          </Button>
 
           {/* Tabs */}
           <Tabs defaultValue="playlists" className="w-full">
