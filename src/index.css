@@ -44,6 +44,12 @@ All colors MUST be HSL.
     --social: 280 65% 55%;
     --scenic: 35 85% 55%;
 
+    /* Emotion colors - red to green spectrum */
+    --emotion-positive: 142 76% 45%; /* Green - positive emotions */
+    --emotion-negative: 0 70% 50%; /* Red - negative emotions */
+    --emotion-neutral: 200 20% 50%; /* Grey - neutral */
+    --emotion-love: 330 80% 55%; /* Pink - love */
+
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -86,5 +92,59 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground font-sans;
+  }
+
+  /* Emotion animations */
+  @keyframes bounce-gentle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  @keyframes pulse-steady {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(0.98); }
+  }
+
+  @keyframes sway-slow {
+    0%, 100% { transform: translateX(0) translateY(0); }
+    25% { transform: translateX(-3px) translateY(2px); }
+    75% { transform: translateX(3px) translateY(2px); }
+  }
+
+  @keyframes shake-fast {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+    20%, 40%, 60%, 80% { transform: translateX(2px); }
+  }
+
+  @keyframes glow-warm {
+    0%, 100% { 
+      transform: scale(1); 
+      filter: drop-shadow(0 0 0px hsl(var(--emotion-love)));
+    }
+    50% { 
+      transform: scale(1.05); 
+      filter: drop-shadow(0 0 8px hsl(var(--emotion-love)));
+    }
+  }
+
+  .animate-bounce-gentle {
+    animation: bounce-gentle 1.5s ease-in-out infinite;
+  }
+
+  .animate-pulse-steady {
+    animation: pulse-steady 2s ease-in-out infinite;
+  }
+
+  .animate-sway-slow {
+    animation: sway-slow 3s ease-in-out infinite;
+  }
+
+  .animate-shake-fast {
+    animation: shake-fast 0.5s ease-in-out infinite;
+  }
+
+  .animate-glow-warm {
+    animation: glow-warm 2s ease-in-out infinite;
   }
 }

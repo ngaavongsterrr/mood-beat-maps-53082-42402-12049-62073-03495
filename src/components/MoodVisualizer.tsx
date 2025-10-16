@@ -3,7 +3,7 @@ import { SpotCategory } from '@/data/spots';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { mockPlaylists } from '@/data/mockData';
-import { X } from 'lucide-react';
+import { X, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface MoodVisualizerProps {
@@ -12,24 +12,74 @@ interface MoodVisualizerProps {
 }
 
 type EmotionType = 'happy' | 'neutral' | 'sad' | 'angry' | 'love';
+type MoodStage = 'before' | 'during' | 'after';
+
+interface MoodEntry {
+  stage: MoodStage;
+  emotion: EmotionType;
+  timestamp: Date;
+}
 
 const emotions = [
-  { id: 'happy' as EmotionType, emoji: '😊', label: 'Happy', color: 'hsl(142, 76%, 45%)', positive: true },
-  { id: 'neutral' as EmotionType, emoji: '😐', label: 'Neutral', color: 'hsl(200, 20%, 50%)', positive: false },
-  { id: 'sad' as EmotionType, emoji: '😢', label: 'Sad', color: 'hsl(220, 60%, 40%)', positive: false },
-  { id: 'angry' as EmotionType, emoji: '😡', label: 'Angry', color: 'hsl(0, 70%, 50%)', positive: false },
-  { id: 'love' as EmotionType, emoji: '😍', label: 'Love', color: 'hsl(330, 80%, 55%)', positive: true },
+  { 
+    id: 'happy' as EmotionType, 
+    emoji: '😊', 
+    label: 'Happy', 
+    color: 'hsl(var(--emotion-positive))', 
+    positive: true,
+    animation: 'animate-bounce-gentle'
+  },
+  { 
+    id: 'neutral' as EmotionType, 
+    emoji: '😐', 
+    label: 'Neutral', 
+    color: 'hsl(var(--emotion-neutral))', 
+    positive: false,
+    animation: 'animate-pulse-steady'
+  },
+  { 
+    id: 'sad' as EmotionType, 
+    emoji: '😢', 
+    label: 'Sad', 
+    color: 'hsl(220, 60%, 40%)', 
+    positive: false,
+    animation: 'animate-sway-slow'
+  },
+  { 
+    id: 'angry' as EmotionType, 
+    emoji: '😡', 
+    label: 'Angry', 
+    color: 'hsl(var(--emotion-negative))', 
+    positive: false,
+    animation: 'animate-shake-fast'
+  },
+  { 
+    id: 'love' as EmotionType, 
+    emoji: '😍', 
+    label: 'Love', 
+    color: 'hsl(var(--emotion-love))', 
+    positive: true,
+    animation: 'animate-glow-warm'
+  },
 ];
+
+const stagePrompts = {
+  before: "How does this playlist make you feel before starting your journey?",
+  during: "How does this playlist feel while exploring?",
+  after: "How well does this playlist match the location's atmosphere?"
+};
 
 const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [showOverlay, setShowOverlay] = useState(false);
+  const [currentStage, setCurrentStage] = useState<MoodStage>('before');
+  const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
   const [selectedMood, setSelectedMood] = useState<EmotionType | null>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
   const [selectedPlaylist, setSelectedPlaylist] = useState<string>(mockPlaylists[0].id);
-  const [burstParticles, setBurstParticles] = useState<any[]>([]);
   const [showSubmitPrompt, setShowSubmitPrompt] = useState(false);
+  const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
   const moodRef = useRef<EmotionType | null>(null);
   const reminderTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
@@ -287,6 +337,15 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
     setSelectedMood(mood);
     moodRef.current = mood;
     setShowOverlay(false);
+    
+    // Save mood entry for current stage
+    const newEntry: MoodEntry = {
+      stage: currentStage,
+      emotion: mood,
+      timestamp: new Date()
+    };
+    setMoodEntries(prev => [...prev.filter(e => e.stage !== currentStage), newEntry]);
+    
     setShowConfirmation(true);
     
     // Trigger burst effect
@@ -310,17 +369,52 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
     }, 2000);
   };
 
-  const handleSubmit = () => {
-    const emotion = emotions.find(e => e.id === selectedMood);
+  const handleContinue = () => {
+    setShowSubmitPrompt(false);
+    
+    // Move to next stage
+    if (currentStage === 'before') {
+      setCurrentStage('during');
+      setSelectedMood(null);
+      moodRef.current = null;
+    } else if (currentStage === 'during') {
+      setCurrentStage('after');
+      setSelectedMood(null);
+      moodRef.current = null;
+    }
+  };
+
+  const handleSaveToJournal = () => {
     const playlist = mockPlaylists.find(p => p.id === selectedPlaylist);
     
+    // Create journal entry data
+    const journalEntry = {
+      playlistName: playlist?.name,
+      category,
+      moodEntries,
+      timestamp: new Date()
+    };
+    
+    // Save to localStorage for journal access
+    const existingEntries = JSON.parse(localStorage.getItem('moodJournalEntries') || '[]');
+    localStorage.setItem('moodJournalEntries', JSON.stringify([...existingEntries, journalEntry]));
+    
     toast({
-      title: "Mood Entry Saved! 🎵",
-      description: `${emotion?.emoji} ${emotion?.label} • ${playlist?.name} added to journal`,
+      title: "Journey Saved! 🎵",
+      description: `${playlist?.name} mood journey saved to your journal`,
     });
     
     setShowSubmitPrompt(false);
-    // Keep the mood and playlist selection visible
+    setShowSaveConfirmation(true);
+    
+    setTimeout(() => {
+      setShowSaveConfirmation(false);
+      // Reset for new journey
+      setMoodEntries([]);
+      setCurrentStage('before');
+      setSelectedMood(null);
+      moodRef.current = null;
+    }, 2000);
   };
 
   const handleClose = () => {
@@ -393,18 +487,47 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
             >
               <X className="h-4 w-4" />
             </Button>
+            
+            {/* Stage indicator */}
+            <div className="text-center mb-4">
+              <div className="flex justify-center gap-2 mb-3">
+                {(['before', 'during', 'after'] as MoodStage[]).map((stage) => (
+                  <div 
+                    key={stage}
+                    className={`h-2 w-12 rounded-full transition-all ${
+                      currentStage === stage 
+                        ? 'bg-primary' 
+                        : moodEntries.some(e => e.stage === stage)
+                        ? 'bg-primary/50'
+                        : 'bg-muted'
+                    }`}
+                  />
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                {currentStage === 'before' && 'Before Journey'}
+                {currentStage === 'during' && 'During Journey'}
+                {currentStage === 'after' && 'After Journey'}
+              </p>
+            </div>
+
             <h3 className="text-lg font-medium text-center mb-6 text-foreground">
-              How does this make you feel?
+              {stagePrompts[currentStage]}
             </h3>
             <div className="grid grid-cols-3 gap-4">
               {emotions.map((emotion) => (
                 <Button
                   key={emotion.id}
                   variant="outline"
-                  className="flex flex-col items-center gap-2 h-auto py-6 hover:scale-110 transition-transform border-white/20 bg-background/50 hover:bg-background/80"
+                  className="flex flex-col items-center gap-2 h-auto py-6 hover:scale-110 transition-all border-white/20 bg-background/50 hover:bg-background/80 relative group"
+                  style={{ 
+                    borderColor: emotion.positive ? 'hsl(var(--emotion-positive) / 0.3)' : 'hsl(var(--emotion-negative) / 0.3)'
+                  }}
                   onClick={() => handleMoodSelect(emotion.id)}
                 >
-                  <span className="text-4xl">{emotion.emoji}</span>
+                  <span className={`text-4xl ${emotion.animation}`}>
+                    {emotion.emoji}
+                  </span>
                 </Button>
               ))}
             </div>
@@ -418,7 +541,7 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
           className="absolute inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center animate-fade-in z-10"
         >
           <div 
-            className="bg-background/95 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-white/10 max-w-sm mx-4 animate-scale-in relative"
+            className="bg-background/95 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-white/10 max-w-md mx-4 animate-scale-in relative"
             onClick={(e) => e.stopPropagation()}
           >
             <Button
@@ -430,31 +553,79 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
               <X className="h-4 w-4" />
             </Button>
             <div className="text-center space-y-4">
-              <div className="text-5xl mb-4">
+              <div className={`text-5xl mb-4 ${emotions.find(e => e.id === selectedMood)?.animation}`}>
                 {emotions.find(e => e.id === selectedMood)?.emoji}
               </div>
               <h3 className="text-lg font-medium text-foreground">
                 {emotions.find(e => e.id === selectedMood)?.label}
               </h3>
               <p className="text-sm text-muted-foreground">
-                Listening to: {mockPlaylists.find(p => p.id === selectedPlaylist)?.name}
+                {mockPlaylists.find(p => p.id === selectedPlaylist)?.name}
               </p>
+
+              {/* Mood journey progress */}
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                {moodEntries.map((entry) => (
+                  <div key={entry.stage} className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground capitalize">{entry.stage}:</span>
+                    <span className="flex items-center gap-2">
+                      {emotions.find(e => e.id === entry.emotion)?.emoji}
+                      <span className="text-foreground">{emotions.find(e => e.id === entry.emotion)?.label}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+
               <div className="flex gap-3 pt-4">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={handleClose}
-                >
-                  Continue Listening
-                </Button>
-                <Button
-                  className="flex-1"
-                  onClick={handleSubmit}
-                >
-                  Save to Journal
-                </Button>
+                {currentStage !== 'after' ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={handleClose}
+                    >
+                      Continue Listening
+                    </Button>
+                    <Button
+                      className="flex-1"
+                      onClick={handleContinue}
+                    >
+                      Next Stage
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={handleClose}
+                    >
+                      Close
+                    </Button>
+                    <Button
+                      className="flex-1 gap-2"
+                      onClick={handleSaveToJournal}
+                    >
+                      <Save className="w-4 h-4" />
+                      Save Journey
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Save Confirmation */}
+      {showSaveConfirmation && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+          <div className="bg-background/90 backdrop-blur-md rounded-2xl px-8 py-6 shadow-lg border border-white/10 animate-scale-in">
+            <p className="text-lg font-medium text-foreground flex items-center gap-3">
+              <Save className="w-5 h-5 text-primary" />
+              Journey saved to journal! 
+              <span className="text-2xl">🎵</span>
+            </p>
           </div>
         </div>
       )}
@@ -479,9 +650,12 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
         {category === 'scenic' && '🌄 Scenic'}
       </div>
 
-      {selectedMood && !showOverlay && !showConfirmation && !showSubmitPrompt && (
+      {selectedMood && !showOverlay && !showConfirmation && !showSubmitPrompt && !showSaveConfirmation && (
         <div className="absolute top-4 right-4 text-white/80 text-sm font-medium bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-2">
-          <span className="text-base">{emotions.find(e => e.id === selectedMood)?.emoji}</span>
+          <span className={`text-base ${emotions.find(e => e.id === selectedMood)?.animation}`}>
+            {emotions.find(e => e.id === selectedMood)?.emoji}
+          </span>
+          <span className="text-xs text-white/60 capitalize">{currentStage}</span>
         </div>
       )}
     </div>
