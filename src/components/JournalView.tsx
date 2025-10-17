@@ -22,6 +22,11 @@ interface JournalCard {
   }>;
   timestamp: string;
   summaryImage?: string;
+  summaryData?: {
+    before?: { stage: string; emotion: string; timestamp: Date };
+    during?: { stage: string; emotion: string; timestamp: Date };
+    after?: { stage: string; emotion: string; timestamp: Date };
+  };
 }
 
 const JournalView = ({ selectedCategory, onCategoryChange }: JournalViewProps) => {
@@ -142,9 +147,16 @@ const JournalView = ({ selectedCategory, onCategoryChange }: JournalViewProps) =
               {/* Card Content */}
               <div className="p-4 space-y-3">
                 <h3 className="text-lg font-semibold">{card.playlistName || 'Mood Journey'}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {new Date(card.timestamp).toLocaleDateString()} • {card.moodEntries.length} emotions recorded
-                </p>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(card.timestamp).toLocaleDateString()} • {card.moodEntries.length} emotions
+                  </p>
+                  <p className="text-xs font-medium text-muted-foreground capitalize">
+                    {card.category === 'peaceful' && '🌊 Peaceful'}
+                    {card.category === 'social' && '✨ Social'}
+                    {card.category === 'scenic' && '🌄 Scenic'}
+                  </p>
+                </div>
 
                 {/* Card Actions */}
                 <div className="flex gap-2 pt-2">

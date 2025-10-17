@@ -3,8 +3,10 @@ import { SpotCategory } from '@/data/spots';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { mockPlaylists } from '@/data/mockData';
-import { X, Save } from 'lucide-react';
+import { X, Save, Camera } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import CustomEmoji from './CustomEmoji';
+import html2canvas from 'html2canvas';
 
 interface MoodVisualizerProps {
   category: SpotCategory;
@@ -25,9 +27,9 @@ const emotions = [
   // Positive spectrum (Joy branch - green) - highest to lowest intensity
   { 
     id: 'love' as EmotionType, 
-    emoji: '🥰', // More expressive love emoji
-    label: 'Ecstatic', // Peak joy - completely absorbed in music
-    description: 'Pure musical bliss',
+    emoji: '😍',
+    label: 'In Love', 
+    description: 'Heart-eyes, completely captivated',
     color: 'hsl(142, 76%, 36%)', // Deep vibrant green
     spectrum: 'positive',
     intensity: 3,
@@ -35,9 +37,9 @@ const emotions = [
   },
   { 
     id: 'happy' as EmotionType, 
-    emoji: '😊', // Warm happy emoji
-    label: 'Joyful', // Active joy - energized by music
-    description: 'Uplifted and energized',
+    emoji: '😄',
+    label: 'Happy', 
+    description: 'Joyful and energized',
     color: 'hsl(142, 71%, 45%)', // Medium green
     spectrum: 'positive',
     intensity: 2,
@@ -45,9 +47,9 @@ const emotions = [
   },
   { 
     id: 'content' as EmotionType, 
-    emoji: '😌', // Peaceful content emoji
-    label: 'Serene', // Gentle joy - calm contentment
-    description: 'Peacefully content',
+    emoji: '😊',
+    label: 'Content', 
+    description: 'Peacefully satisfied',
     color: 'hsl(142, 65%, 55%)', // Light green
     spectrum: 'positive',
     intensity: 1,
@@ -56,9 +58,9 @@ const emotions = [
   // Negative spectrum (Sadness/Anger branch - red) - highest to lowest intensity
   { 
     id: 'angry' as EmotionType, 
-    emoji: '😤', // Frustrated/intense emoji
-    label: 'Intense', // Peak negative - overwhelmed/agitated
-    description: 'Feeling overwhelmed',
+    emoji: '😡',
+    label: 'Angry', 
+    description: 'Frustrated or agitated',
     color: 'hsl(0, 84%, 60%)', // Bright red
     spectrum: 'negative',
     intensity: 3,
@@ -66,9 +68,9 @@ const emotions = [
   },
   { 
     id: 'sad' as EmotionType, 
-    emoji: '😔', // Pensive/melancholic emoji
-    label: 'Melancholic', // Active sadness - processing emotions
-    description: 'Reflectively somber',
+    emoji: '😢',
+    label: 'Sad', 
+    description: 'Tearful and melancholic',
     color: 'hsl(0, 70%, 50%)', // Medium red
     spectrum: 'negative',
     intensity: 2,
@@ -76,9 +78,9 @@ const emotions = [
   },
   { 
     id: 'disappointed' as EmotionType, 
-    emoji: '😕', // Slightly concerned emoji
-    label: 'Pensive', // Gentle sadness - thoughtful
-    description: 'Thoughtfully quiet',
+    emoji: '☹️',
+    label: 'Disappointed', 
+    description: 'Let down or dissatisfied',
     color: 'hsl(0, 60%, 40%)', // Dark red
     spectrum: 'negative',
     intensity: 1,
@@ -87,9 +89,9 @@ const emotions = [
   // Neutral/Curious spectrum (Anticipation branch - gray) - highest to lowest intensity
   { 
     id: 'neutral' as EmotionType, 
-    emoji: '😶', // Blank/waiting emoji
-    label: 'Observant', // Actively neutral - open receptivity
-    description: 'Openly receptive',
+    emoji: '😐',
+    label: 'Neutral', 
+    description: 'Indifferent, neither good nor bad',
     color: 'hsl(210, 10%, 60%)', // Light neutral gray
     spectrum: 'neutral',
     intensity: 2,
@@ -97,9 +99,9 @@ const emotions = [
   },
   { 
     id: 'curious' as EmotionType, 
-    emoji: '🤔', // Thoughtful/exploring emoji
-    label: 'Intrigued', // Gentle curiosity - discovering
-    description: 'Exploratively curious',
+    emoji: '🧐',
+    label: 'Curious', 
+    description: 'Thoughtfully intrigued',
     color: 'hsl(210, 8%, 50%)', // Medium neutral gray
     spectrum: 'neutral',
     intensity: 1,
@@ -124,6 +126,8 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
   const [selectedPlaylist, setSelectedPlaylist] = useState<string>(mockPlaylists[0].id);
   const [showSubmitPrompt, setShowSubmitPrompt] = useState(false);
   const [showSaveConfirmation, setShowSaveConfirmation] = useState(false);
+  const [summaryScreenshot, setSummaryScreenshot] = useState<string | null>(null);
+  const summaryRef = useRef<HTMLDivElement>(null);
   const moodRef = useRef<EmotionType | null>(null);
   const reminderTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
@@ -455,24 +459,31 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
     }
   };
 
-  const handleSaveToJournal = () => {
+  const handleSaveToJournal = async () => {
+    if (moodEntries.length !== 3) return;
+    
     const playlist = mockPlaylists.find(p => p.id === selectedPlaylist);
     
-    // Create a simple text summary for now (screenshot generation will be added separately)
+    // Capture screenshot of summary if available
+    let screenshotData: string | undefined;
+    if (summaryRef.current) {
+      try {
+        const canvas = await html2canvas(summaryRef.current, {
+          backgroundColor: '#1a1a1a',
+          scale: 2,
+          logging: false,
+        });
+        screenshotData = canvas.toDataURL('image/png');
+      } catch (error) {
+        console.error('Failed to capture screenshot:', error);
+      }
+    }
+    
+    // Build summary text
     const summary = {
-      playlistName: playlist?.name || 'Mood Journey',
-      category,
-      moodEntries: moodEntries.map(entry => {
-        const emotion = emotions.find(e => e.id === entry.emotion);
-        return {
-          stage: entry.stage,
-          emotion: entry.emotion,
-          emotionLabel: emotion?.label,
-          emotionEmoji: emotion?.emoji,
-          timestamp: entry.timestamp.toISOString()
-        };
-      }),
-      timestamp: new Date().toISOString()
+      before: moodEntries.find(e => e.stage === 'before'),
+      during: moodEntries.find(e => e.stage === 'during'),
+      after: moodEntries.find(e => e.stage === 'after')
     };
     
     // Create journal entry
@@ -486,7 +497,8 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
         timestamp: e.timestamp.toISOString()
       })),
       timestamp: new Date().toISOString(),
-      summaryData: summary
+      summaryData: summary,
+      summaryImage: screenshotData // Save the screenshot
     };
     
     // Save to localStorage
@@ -616,16 +628,16 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
                 <Button
                   key={emotion.id}
                   variant="outline"
-                  className="flex flex-col items-center gap-2 h-auto py-6 hover:scale-110 transition-all border-white/20 bg-background/50 hover:bg-background/80 relative group"
+                  className="flex flex-col items-center gap-2 h-auto py-4 hover:scale-110 transition-all border-2"
                   style={{ 
-                    borderColor: `${emotion.color.replace(')', ' / 0.3)')}`
+                    borderColor: `${emotion.color.replace(')', ' / 0.5)')}`
                   }}
                   onClick={() => handleMoodSelect(emotion.id)}
                 >
-                  <span className={`text-4xl ${emotion.animation}`}>
-                    {emotion.emoji}
-                  </span>
-                  <span className="text-xs text-muted-foreground">{emotion.label}</span>
+                  <div className={emotion.animation}>
+                    <CustomEmoji type={emotion.id} size={48} />
+                  </div>
+                  <span className="text-xs text-muted-foreground font-medium">{emotion.label}</span>
                 </Button>
               ))}
             </div>
@@ -639,6 +651,7 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
           className="absolute inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center animate-fade-in z-10"
         >
           <div 
+            ref={summaryRef}
             className="bg-background/95 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-white/10 max-w-md mx-4 animate-scale-in relative"
             onClick={(e) => e.stopPropagation()}
           >
@@ -651,8 +664,8 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
               <X className="h-4 w-4" />
             </Button>
             <div className="text-center space-y-4">
-              <div className={`text-5xl mb-4 ${emotions.find(e => e.id === selectedMood)?.animation}`}>
-                {emotions.find(e => e.id === selectedMood)?.emoji}
+              <div className={`flex justify-center mb-4 ${emotions.find(e => e.id === selectedMood)?.animation}`}>
+                <CustomEmoji type={selectedMood || 'neutral'} size={64} />
               </div>
               <h3 className="text-lg font-medium text-foreground">
                 {emotions.find(e => e.id === selectedMood)?.label}
@@ -662,13 +675,16 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
               </p>
 
               {/* Mood journey progress */}
-              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+              <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                  Your Journey
+                </h4>
                 {moodEntries.map((entry) => (
-                  <div key={entry.stage} className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground capitalize">{entry.stage}:</span>
+                  <div key={entry.stage} className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground capitalize">{entry.stage}:</span>
                     <span className="flex items-center gap-2">
-                      {emotions.find(e => e.id === entry.emotion)?.emoji}
-                      <span className="text-foreground">{emotions.find(e => e.id === entry.emotion)?.label}</span>
+                      <CustomEmoji type={entry.emotion} size={24} />
+                      <span className="text-sm font-medium text-foreground">{emotions.find(e => e.id === entry.emotion)?.label}</span>
                     </span>
                   </div>
                 ))}
@@ -731,13 +747,9 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
       {/* Confirmation Message */}
       {showConfirmation && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-          <div className="bg-background/90 backdrop-blur-md rounded-full px-6 py-3 shadow-lg border border-white/10 animate-fade-in">
-            <p className="text-sm font-medium text-foreground flex items-center gap-2">
-              Mood captured 
-              <span className="text-lg">
-                {emotions.find(e => e.id === selectedMood)?.emoji}
-              </span>
-            </p>
+          <div className="bg-background/90 backdrop-blur-md rounded-full px-6 py-3 shadow-lg border border-white/10 animate-fade-in flex items-center gap-2">
+            <p className="text-sm font-medium text-foreground">Mood captured</p>
+            <CustomEmoji type={selectedMood || 'neutral'} size={24} />
           </div>
         </div>
       )}
@@ -750,9 +762,7 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
 
       {selectedMood && !showOverlay && !showConfirmation && !showSubmitPrompt && !showSaveConfirmation && (
         <div className="absolute top-4 right-4 text-white/80 text-sm font-medium bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-2">
-          <span className={`text-base ${emotions.find(e => e.id === selectedMood)?.animation}`}>
-            {emotions.find(e => e.id === selectedMood)?.emoji}
-          </span>
+          <CustomEmoji type={selectedMood} size={20} />
           <span className="text-xs text-white/60 capitalize">{currentStage}</span>
         </div>
       )}
