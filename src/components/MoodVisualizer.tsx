@@ -20,21 +20,24 @@ interface MoodEntry {
   timestamp: Date;
 }
 
+// Plutchik's Wheel of Emotions adapted for music/playlist context
 const emotions = [
-  // Positive spectrum (green) - intensity order: most to least
+  // Positive spectrum (Joy branch - green) - highest to lowest intensity
   { 
     id: 'love' as EmotionType, 
-    emoji: '😍', 
-    label: 'Love', 
-    color: 'hsl(142, 76%, 36%)', // Deep green - highest intensity
+    emoji: '🥰', // More expressive love emoji
+    label: 'Ecstatic', // Peak joy - completely absorbed in music
+    description: 'Pure musical bliss',
+    color: 'hsl(142, 76%, 36%)', // Deep vibrant green
     spectrum: 'positive',
     intensity: 3,
     animation: 'animate-bounce-gentle'
   },
   { 
     id: 'happy' as EmotionType, 
-    emoji: '😄', 
-    label: 'Happy', 
+    emoji: '😊', // Warm happy emoji
+    label: 'Joyful', // Active joy - energized by music
+    description: 'Uplifted and energized',
     color: 'hsl(142, 71%, 45%)', // Medium green
     spectrum: 'positive',
     intensity: 2,
@@ -42,56 +45,62 @@ const emotions = [
   },
   { 
     id: 'content' as EmotionType, 
-    emoji: '😊', 
-    label: 'Content', 
-    color: 'hsl(142, 65%, 55%)', // Light green - lowest intensity
+    emoji: '😌', // Peaceful content emoji
+    label: 'Serene', // Gentle joy - calm contentment
+    description: 'Peacefully content',
+    color: 'hsl(142, 65%, 55%)', // Light green
     spectrum: 'positive',
     intensity: 1,
     animation: 'animate-bounce-gentle'
   },
-  // Negative spectrum (red) - intensity order: most to least
+  // Negative spectrum (Sadness/Anger branch - red) - highest to lowest intensity
   { 
-    id: 'disappointed' as EmotionType, 
-    emoji: '☹️', 
-    label: 'Disappointed', 
-    color: 'hsl(0, 84%, 60%)', // Bright red - highest intensity
+    id: 'angry' as EmotionType, 
+    emoji: '😤', // Frustrated/intense emoji
+    label: 'Intense', // Peak negative - overwhelmed/agitated
+    description: 'Feeling overwhelmed',
+    color: 'hsl(0, 84%, 60%)', // Bright red
     spectrum: 'negative',
     intensity: 3,
     animation: 'animate-shake-fast'
   },
   { 
     id: 'sad' as EmotionType, 
-    emoji: '😢', 
-    label: 'Sad', 
+    emoji: '😔', // Pensive/melancholic emoji
+    label: 'Melancholic', // Active sadness - processing emotions
+    description: 'Reflectively somber',
     color: 'hsl(0, 70%, 50%)', // Medium red
     spectrum: 'negative',
     intensity: 2,
     animation: 'animate-sway-slow'
   },
   { 
-    id: 'angry' as EmotionType, 
-    emoji: '😡', 
-    label: 'Angry', 
-    color: 'hsl(0, 60%, 40%)', // Dark red - lowest intensity
+    id: 'disappointed' as EmotionType, 
+    emoji: '😕', // Slightly concerned emoji
+    label: 'Pensive', // Gentle sadness - thoughtful
+    description: 'Thoughtfully quiet',
+    color: 'hsl(0, 60%, 40%)', // Dark red
     spectrum: 'negative',
     intensity: 1,
-    animation: 'animate-shake-fast'
+    animation: 'animate-sway-slow'
   },
-  // Neutral/Indifferent spectrum - intensity order: most to least
+  // Neutral/Curious spectrum (Anticipation branch - gray) - highest to lowest intensity
   { 
     id: 'neutral' as EmotionType, 
-    emoji: '😐', 
-    label: 'Neutral', 
-    color: 'hsl(210, 10%, 60%)', // Neutral gray - highest intensity
+    emoji: '😶', // Blank/waiting emoji
+    label: 'Observant', // Actively neutral - open receptivity
+    description: 'Openly receptive',
+    color: 'hsl(210, 10%, 60%)', // Light neutral gray
     spectrum: 'neutral',
     intensity: 2,
     animation: 'animate-pulse-steady'
   },
   { 
     id: 'curious' as EmotionType, 
-    emoji: '🧐', 
-    label: 'Curious', 
-    color: 'hsl(210, 8%, 50%)', // Darker neutral - lowest intensity
+    emoji: '🤔', // Thoughtful/exploring emoji
+    label: 'Intrigued', // Gentle curiosity - discovering
+    description: 'Exploratively curious',
+    color: 'hsl(210, 8%, 50%)', // Medium neutral gray
     spectrum: 'neutral',
     intensity: 1,
     animation: 'animate-pulse-steady'
@@ -118,6 +127,12 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
   const moodRef = useRef<EmotionType | null>(null);
   const reminderTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+  
+  // Auto-sync playlist with location category when available
+  useEffect(() => {
+    // For now, keep the first playlist selected - category mapping will be added later
+    if (mockPlaylists[0]) setSelectedPlaylist(mockPlaylists[0].id);
+  }, [category]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -443,17 +458,43 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
   const handleSaveToJournal = () => {
     const playlist = mockPlaylists.find(p => p.id === selectedPlaylist);
     
-    // Create journal entry data
-    const journalEntry = {
-      playlistName: playlist?.name,
+    // Create a simple text summary for now (screenshot generation will be added separately)
+    const summary = {
+      playlistName: playlist?.name || 'Mood Journey',
       category,
-      moodEntries,
-      timestamp: new Date()
+      moodEntries: moodEntries.map(entry => {
+        const emotion = emotions.find(e => e.id === entry.emotion);
+        return {
+          stage: entry.stage,
+          emotion: entry.emotion,
+          emotionLabel: emotion?.label,
+          emotionEmoji: emotion?.emoji,
+          timestamp: entry.timestamp.toISOString()
+        };
+      }),
+      timestamp: new Date().toISOString()
     };
     
-    // Save to localStorage for journal access
+    // Create journal entry
+    const journalEntry = {
+      id: `journey-${Date.now()}`,
+      playlistName: playlist?.name,
+      category,
+      moodEntries: moodEntries.map(e => ({
+        stage: e.stage,
+        emotion: e.emotion,
+        timestamp: e.timestamp.toISOString()
+      })),
+      timestamp: new Date().toISOString(),
+      summaryData: summary
+    };
+    
+    // Save to localStorage
     const existingEntries = JSON.parse(localStorage.getItem('moodJournalEntries') || '[]');
     localStorage.setItem('moodJournalEntries', JSON.stringify([...existingEntries, journalEntry]));
+    
+    // Trigger storage event for journal view
+    window.dispatchEvent(new Event('storage'));
     
     toast({
       title: "Journey Saved! 🎵",

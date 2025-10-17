@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Music, Sparkles, Navigation } from 'lucide-react';
+import { X, Music, Sparkles, Navigation, Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -127,8 +127,22 @@ const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
               {/* Spotify Playlists */}
               <div className="space-y-4">
                 {filteredPlaylists.map((playlist) => (
-                  <div key={playlist.id} className="space-y-2">
-                    <h4 className="font-medium">{playlist.name}</h4>
+                  <div key={playlist.id} className="space-y-2 relative group">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium">{playlist.name}</h4>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => {
+                          const spotifyAppUrl = playlist.spotifyUrl.replace('/embed/', '/');
+                          window.open(spotifyAppUrl, '_blank');
+                        }}
+                      >
+                        <Plus className="w-4 h-4" />
+                        Open in Spotify
+                      </Button>
+                    </div>
                     <div className="aspect-[16/9] w-full rounded-lg overflow-hidden bg-muted">
                       <iframe
                         src={playlist.spotifyUrl}
