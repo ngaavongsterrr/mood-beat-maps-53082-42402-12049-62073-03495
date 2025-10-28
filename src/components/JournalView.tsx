@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Plus, Image, Video, Pencil, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import FilterBar from './FilterBar';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
@@ -36,96 +35,49 @@ const JournalView = ({ selectedCategory, onCategoryChange }: JournalViewProps) =
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
 
-  // Load journal cards from database
+  // Load journal cards from localStorage
   useEffect(() => {
-    loadJournalCards();
-
-    // Subscribe to realtime changes
-    const channel = supabase
-      .channel('journal-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'journal_entries',
-        },
-        () => {
-          loadJournalCards();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
+    const loadJournalCards = () => {
+      const entries = JSON.parse(localStorage.getItem('moodJournalEntries') || '[]');
+      setJournalCards(entries);
     };
+    
+    loadJournalCards();
+    
+    // Listen for new journal entries
+    const handleStorageChange = () => {
+      loadJournalCards();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const loadJournalCards = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from('journal_entries')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error loading journal entries:', error);
-      toast({
-        title: "Error loading entries",
-        description: error.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (data) {
-      const formattedCards = data.map(entry => ({
-        id: entry.id,
-        playlistName: entry.playlist_name || undefined,
-        category: entry.category,
-        moodEntries: (entry.mood_entries as any) || [],
-        timestamp: entry.created_at,
-        summaryImage: entry.summary_image || undefined,
-        summaryData: (entry.summary_data as any) || undefined,
-      }));
-      setJournalCards(formattedCards);
-    }
-  };
-
-  const handlePhotoUpload = async (cardId: string) => {
+  const handlePhotoUpload = (cardId: string) => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = async (e: Event) => {
+    input.onchange = (e: Event) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
         const reader = new FileReader();
-        reader.onload = async (event) => {
+        reader.onload = (event) => {
           const imageData = event.target?.result as string;
           
-          // Update the card in the database
-          const { error } = await supabase
-            .from('journal_entries')
-            .update({ summary_image: imageData })
-            .eq('id', cardId);
-
-          if (error) {
-            toast({
-              title: "Error uploading photo",
-              description: error.message,
-              variant: "destructive",
-            });
-            return;
-          }
+          // Update the card with the image
+          const updatedCards = journalCards.map(card => 
+            card.id === cardId 
+              ? { ...card, summaryImage: imageData }
+              : card
+          );
+          
+          setJournalCards(updatedCards);
+          localStorage.setItem('moodJournalEntries', JSON.stringify(updatedCards));
           
           toast({
             title: "Photo added! 📸",
             description: "Your journey photo has been saved",
           });
-          
-          loadJournalCards();
         };
         reader.readAsDataURL(file);
       }

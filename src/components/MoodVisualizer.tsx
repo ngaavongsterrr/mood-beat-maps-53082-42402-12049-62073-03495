@@ -5,7 +5,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { mockPlaylists } from '@/data/mockData';
 import { X, Save, Camera } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import CustomEmoji from './CustomEmoji';
 import html2canvas from 'html2canvas';
 
@@ -465,86 +464,66 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
     
     const playlist = mockPlaylists.find(p => p.id === selectedPlaylist);
     
-    try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: 'Error',
-          description: 'You must be logged in to save journeys',
-          variant: 'destructive',
+    // Capture screenshot of summary if available
+    let screenshotData: string | undefined;
+    if (summaryRef.current) {
+      try {
+        const canvas = await html2canvas(summaryRef.current, {
+          backgroundColor: '#1a1a1a',
+          scale: 2,
+          logging: false,
         });
-        return;
+        screenshotData = canvas.toDataURL('image/png');
+      } catch (error) {
+        console.error('Failed to capture screenshot:', error);
       }
-
-      // Capture screenshot of summary if available
-      let screenshotData: string | undefined;
-      if (summaryRef.current) {
-        try {
-          const canvas = await html2canvas(summaryRef.current, {
-            backgroundColor: '#1a1a1a',
-            scale: 2,
-            logging: false,
-          });
-          screenshotData = canvas.toDataURL('image/png');
-        } catch (error) {
-          console.error('Failed to capture screenshot:', error);
-        }
-      }
-      
-      // Build summary data
-      const summary = {
-        before: moodEntries.find(e => e.stage === 'before'),
-        during: moodEntries.find(e => e.stage === 'during'),
-        after: moodEntries.find(e => e.stage === 'after')
-      };
-      
-      const formattedEntries = moodEntries.map(e => ({
+    }
+    
+    // Build summary text
+    const summary = {
+      before: moodEntries.find(e => e.stage === 'before'),
+      during: moodEntries.find(e => e.stage === 'during'),
+      after: moodEntries.find(e => e.stage === 'after')
+    };
+    
+    // Create journal entry
+    const journalEntry = {
+      id: `journey-${Date.now()}`,
+      playlistName: playlist?.name,
+      category,
+      moodEntries: moodEntries.map(e => ({
         stage: e.stage,
         emotion: e.emotion,
         timestamp: e.timestamp.toISOString()
-      }));
-
-      // Save to database
-      const { error } = await supabase
-        .from('journal_entries')
-        .insert({
-          user_id: user.id,
-          playlist_name: playlist?.name,
-          category,
-          mood_entries: formattedEntries as any,
-          summary_image: screenshotData,
-          summary_data: summary as any,
-        } as any);
-
-      if (error) {
-        throw error;
-      }
-      
-      toast({
-        title: "Journey Saved! 🎵",
-        description: `${playlist?.name} mood journey saved to your journal`,
-      });
-      
-      setShowSubmitPrompt(false);
-      setShowSaveConfirmation(true);
-      
-      setTimeout(() => {
-        setShowSaveConfirmation(false);
-        // Reset for new journey
-        setMoodEntries([]);
-        setCurrentStage('before');
-        setSelectedMood(null);
-        moodRef.current = null;
-      }, 2000);
-    } catch (error: any) {
-      console.error('Error saving to journal:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to save journey. Please try again.',
-        variant: 'destructive',
-      });
-    }
+      })),
+      timestamp: new Date().toISOString(),
+      summaryData: summary,
+      summaryImage: screenshotData // Save the screenshot
+    };
+    
+    // Save to localStorage
+    const existingEntries = JSON.parse(localStorage.getItem('moodJournalEntries') || '[]');
+    localStorage.setItem('moodJournalEntries', JSON.stringify([...existingEntries, journalEntry]));
+    
+    // Trigger storage event for journal view
+    window.dispatchEvent(new Event('storage'));
+    
+    toast({
+      title: "Journey Saved! 🎵",
+      description: `${playlist?.name} mood journey saved to your journal`,
+    });
+    
+    setShowSubmitPrompt(false);
+    setShowSaveConfirmation(true);
+    
+    setTimeout(() => {
+      setShowSaveConfirmation(false);
+      // Reset for new journey
+      setMoodEntries([]);
+      setCurrentStage('before');
+      setSelectedMood(null);
+      moodRef.current = null;
+    }, 2000);
   };
 
   const handleClose = () => {
