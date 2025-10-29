@@ -140,6 +140,11 @@ const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
                           localStorage.setItem('selectedSpotifyPlaylist', playlist.name);
                           localStorage.setItem('selectedLocationTitle', spot.name);
                           
+                          // Dispatch custom event to trigger instant update in MoodVisualizer
+                          window.dispatchEvent(new CustomEvent('spotifyPlaylistSelected', {
+                            detail: { category: playlist.category, playlistName: playlist.name }
+                          }));
+                          
                           const spotifyAppUrl = playlist.spotifyUrl.replace('/embed/', '/');
                           window.open(spotifyAppUrl, '_blank');
                         }}

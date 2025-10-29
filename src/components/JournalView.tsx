@@ -1,10 +1,12 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Image, Video, Pencil, Download } from 'lucide-react';
+import { Plus, Image, Video, Pencil, Download, Edit2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import FilterBar from './FilterBar';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface JournalViewProps {
   selectedCategory: string | null;
@@ -37,6 +39,12 @@ const JournalView = ({ selectedCategory, onCategoryChange }: JournalViewProps) =
   const [journalCards, setJournalCards] = useState<JournalCard[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [editingCard, setEditingCard] = useState<JournalCard | null>(null);
+  const [editForm, setEditForm] = useState({
+    locationTitle: '',
+    playlistCategoryName: '',
+    spotifyPlaylistName: ''
+  });
 
   // Load journal cards from localStorage
   useEffect(() => {
@@ -100,6 +108,40 @@ const JournalView = ({ selectedCategory, onCategoryChange }: JournalViewProps) =
     });
   };
 
+  const handleEditCard = (card: JournalCard) => {
+    setEditingCard(card);
+    setEditForm({
+      locationTitle: card.locationTitle || '',
+      playlistCategoryName: card.playlistCategoryName || '',
+      spotifyPlaylistName: card.spotifyPlaylistName || ''
+    });
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingCard) return;
+    
+    const updatedCards = journalCards.map(card => 
+      card.id === editingCard.id
+        ? {
+            ...card,
+            locationTitle: editForm.locationTitle,
+            playlistCategoryName: editForm.playlistCategoryName,
+            spotifyPlaylistName: editForm.spotifyPlaylistName
+          }
+        : card
+    );
+    
+    setJournalCards(updatedCards);
+    localStorage.setItem('moodJournalEntries', JSON.stringify(updatedCards));
+    
+    toast({
+      title: "Updated! ✏️",
+      description: "Journey details have been updated",
+    });
+    
+    setEditingCard(null);
+  };
+
   const filteredCards = selectedCategory
     ? journalCards.filter(card => card.category === selectedCategory)
     : journalCards;
@@ -149,8 +191,16 @@ const JournalView = ({ selectedCategory, onCategoryChange }: JournalViewProps) =
 
               {/* Card Content */}
               <div className="p-4 space-y-3">
-                <div className="space-y-1">
-                  <h3 className="text-base font-medium">{card.locationTitle || 'Unknown Location'}</h3>
+                <div className="space-y-1 relative">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute -top-1 -right-1 h-8 w-8"
+                    onClick={() => handleEditCard(card)}
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                  <h3 className="text-base font-medium pr-8">{card.locationTitle || 'Unknown Location'}</h3>
                   <p className="text-sm text-muted-foreground">{card.playlistCategoryName || card.category}</p>
                   {card.spotifyPlaylistName && (
                     <p className="text-xs text-muted-foreground italic">{card.spotifyPlaylistName} - Spotify</p>
@@ -240,6 +290,52 @@ const JournalView = ({ selectedCategory, onCategoryChange }: JournalViewProps) =
                 </div>
               </>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Card Dialog */}
+      <Dialog open={editingCard !== null} onOpenChange={(open) => !open && setEditingCard(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Journey Details</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="locationTitle">Location</Label>
+              <Input
+                id="locationTitle"
+                value={editForm.locationTitle}
+                onChange={(e) => setEditForm({ ...editForm, locationTitle: e.target.value })}
+                placeholder="Location name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="playlistCategoryName">Playlist Category</Label>
+              <Input
+                id="playlistCategoryName"
+                value={editForm.playlistCategoryName}
+                onChange={(e) => setEditForm({ ...editForm, playlistCategoryName: e.target.value })}
+                placeholder="e.g., Coffeeshop Vibes"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="spotifyPlaylistName">Spotify Playlist</Label>
+              <Input
+                id="spotifyPlaylistName"
+                value={editForm.spotifyPlaylistName}
+                onChange={(e) => setEditForm({ ...editForm, spotifyPlaylistName: e.target.value })}
+                placeholder="e.g., Guilty Pleasures"
+              />
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Button variant="outline" className="flex-1" onClick={() => setEditingCard(null)}>
+              Cancel
+            </Button>
+            <Button className="flex-1" onClick={handleSaveEdit}>
+              Save Changes
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
