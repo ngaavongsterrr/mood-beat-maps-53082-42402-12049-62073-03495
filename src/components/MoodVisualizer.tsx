@@ -131,11 +131,31 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
   const moodRef = useRef<EmotionType | null>(null);
   const reminderTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+  const [hasValidSelection, setHasValidSelection] = useState(false);
   
-  // Auto-sync playlist with location category when available
+  // Auto-sync playlist from localStorage (from Spotify button click)
   useEffect(() => {
-    // For now, keep the first playlist selected - category mapping will be added later
-    if (mockPlaylists[0]) setSelectedPlaylist(mockPlaylists[0].id);
+    const savedCategory = localStorage.getItem('selectedPlaylistCategory');
+    if (savedCategory) {
+      // Find a playlist matching the saved category
+      const matchingPlaylist = mockPlaylists.find(p => {
+        const categoryMatch = p.name.toLowerCase().includes(savedCategory.toLowerCase()) ||
+                            (savedCategory === 'social' && p.name.includes('Coffee')) ||
+                            (savedCategory === 'peaceful' && p.name.includes('Garden')) ||
+                            (savedCategory === 'scenic' && p.name.includes('Epic'));
+        return categoryMatch;
+      });
+      if (matchingPlaylist) {
+        setSelectedPlaylist(matchingPlaylist.id);
+        setHasValidSelection(true);
+      }
+    } else {
+      // Default to first playlist but require user to confirm selection
+      if (mockPlaylists[0]) {
+        setSelectedPlaylist(mockPlaylists[0].id);
+        setHasValidSelection(false);
+      }
+    }
   }, [category]);
 
   useEffect(() => {
@@ -464,16 +484,26 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
     
     const playlist = mockPlaylists.find(p => p.id === selectedPlaylist);
     
-    // Capture screenshot of summary if available
+    // Capture screenshot of summary with light theme
     let screenshotData: string | undefined;
     if (summaryRef.current) {
       try {
+        // Apply light theme temporarily
+        const originalBg = summaryRef.current.style.backgroundColor;
+        const originalColor = summaryRef.current.style.color;
+        summaryRef.current.style.backgroundColor = '#fafafa';
+        summaryRef.current.style.color = '#111';
+        
         const canvas = await html2canvas(summaryRef.current, {
-          backgroundColor: '#1a1a1a',
+          backgroundColor: '#fafafa',
           scale: 2,
           logging: false,
         });
         screenshotData = canvas.toDataURL('image/png');
+        
+        // Revert to original
+        summaryRef.current.style.backgroundColor = originalBg;
+        summaryRef.current.style.color = originalColor;
       } catch (error) {
         console.error('Failed to capture screenshot:', error);
       }
@@ -486,10 +516,18 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
       after: moodEntries.find(e => e.stage === 'after')
     };
     
+    // Get stored data
+    const playlistCategoryName = localStorage.getItem('selectedPlaylistCategory') || category;
+    const spotifyPlaylistName = localStorage.getItem('selectedSpotifyPlaylist') || playlist?.name || '';
+    const locationTitle = localStorage.getItem('selectedLocationTitle') || 'Unknown Location';
+    
     // Create journal entry
     const journalEntry = {
       id: `journey-${Date.now()}`,
+      locationTitle,
       playlistName: playlist?.name,
+      playlistCategoryName,
+      spotifyPlaylistName,
       category,
       moodEntries: moodEntries.map(e => ({
         stage: e.stage,
@@ -498,7 +536,7 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
       })),
       timestamp: new Date().toISOString(),
       summaryData: summary,
-      summaryImage: screenshotData // Save the screenshot
+      summaryImage: screenshotData
     };
     
     // Save to localStorage
@@ -507,6 +545,13 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
     
     // Trigger storage event for journal view
     window.dispatchEvent(new Event('storage'));
+    
+    // Sync to Google Sheets (silent fail)
+    fetch('https://script.google.com/macros/s/AKfycbwJWZ_YtNln5bKTBTLJCAIBsSidYxx04k7fRO-Oqy2Bmi2RNO4MfoGjxnUdEjGfWU2M/exec', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(journalEntry)
+    }).catch(err => console.log('Sync failed:', err));
     
     toast({
       title: "Journey Saved! 🎵",
@@ -532,7 +577,7 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
   };
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!showOverlay && !showConfirmation) {
+    if (!showOverlay && !showConfirmation && hasValidSelection) {
       setShowOverlay(true);
     }
   };
@@ -542,8 +587,12 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
   return (
     <div className="relative w-full h-full min-h-[300px] rounded-lg overflow-hidden bg-black/80 backdrop-blur-sm">
       {/* Playlist Selector */}
-      <div className="absolute top-4 left-4 z-30">
-        <Select value={selectedPlaylist} onValueChange={setSelectedPlaylist}>
+      <div className={`absolute top-4 left-4 z-30 ${!hasValidSelection ? 'animate-pulse' : ''}`}
+           style={!hasValidSelection ? { boxShadow: '0 0 0 2px rgba(239, 68, 68, 0.6)' } : {}}>
+        <Select value={selectedPlaylist} onValueChange={(val) => {
+          setSelectedPlaylist(val);
+          setHasValidSelection(true);
+        }}>
           <SelectTrigger className="w-[200px] bg-black/60 backdrop-blur-md border-white/20 text-white">
             <SelectValue placeholder="Select playlist" />
           </SelectTrigger>
@@ -567,6 +616,17 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
         className="w-full h-full cursor-pointer"
         onClick={handleCanvasClick}
       />
+
+      {/* Lightbox when no valid selection */}
+      {!hasValidSelection && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20 animate-fade-in">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 max-w-[200px] text-center">
+            <p className="text-xs text-white/90">
+              Please select your playlist category above
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Periodic Reminder */}
       {showReminder && !selectedMood && !showOverlay && (
@@ -672,6 +732,9 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
               </h3>
               <p className="text-sm text-muted-foreground">
                 {mockPlaylists.find(p => p.id === selectedPlaylist)?.name}
+              </p>
+              <p className="text-xs text-muted-foreground italic">
+                {localStorage.getItem('selectedSpotifyPlaylist') || ''} - Spotify
               </p>
 
               {/* Mood journey progress */}

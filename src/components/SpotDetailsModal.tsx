@@ -135,6 +135,11 @@ const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
                         variant="ghost"
                         className="gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={() => {
+                          // Store playlist selection for Mood Visualizer auto-sync
+                          localStorage.setItem('selectedPlaylistCategory', playlist.category);
+                          localStorage.setItem('selectedSpotifyPlaylist', playlist.name);
+                          localStorage.setItem('selectedLocationTitle', spot.name);
+                          
                           const spotifyAppUrl = playlist.spotifyUrl.replace('/embed/', '/');
                           window.open(spotifyAppUrl, '_blank');
                         }}

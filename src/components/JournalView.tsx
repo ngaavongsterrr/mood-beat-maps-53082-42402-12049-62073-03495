@@ -13,7 +13,10 @@ interface JournalViewProps {
 
 interface JournalCard {
   id: string;
+  locationTitle?: string;
   playlistName?: string;
+  playlistCategoryName?: string;
+  spotifyPlaylistName?: string;
   category: string;
   moodEntries: Array<{
     stage: string;
@@ -146,15 +149,19 @@ const JournalView = ({ selectedCategory, onCategoryChange }: JournalViewProps) =
 
               {/* Card Content */}
               <div className="p-4 space-y-3">
-                <h3 className="text-lg font-semibold">{card.playlistName || 'Mood Journey'}</h3>
                 <div className="space-y-1">
+                  <h3 className="text-base font-medium">{card.locationTitle || 'Unknown Location'}</h3>
+                  <p className="text-sm text-muted-foreground">{card.playlistCategoryName || card.category}</p>
+                  {card.spotifyPlaylistName && (
+                    <p className="text-xs text-muted-foreground italic">{card.spotifyPlaylistName} - Spotify</p>
+                  )}
                   <p className="text-sm text-muted-foreground">
-                    {new Date(card.timestamp).toLocaleDateString()} • {card.moodEntries.length} emotions
-                  </p>
-                  <p className="text-xs font-medium text-muted-foreground capitalize">
-                    {card.category === 'peaceful' && '🌊 Peaceful'}
-                    {card.category === 'social' && '✨ Social'}
-                    {card.category === 'scenic' && '🌄 Scenic'}
+                    {new Date(card.timestamp).toLocaleDateString()} • {card.moodEntries.length} emotions • {' '}
+                    <span className="font-medium capitalize">
+                      {card.category === 'peaceful' && '🌊 Peaceful'}
+                      {card.category === 'social' && '✨ Social'}
+                      {card.category === 'scenic' && '🌄 Scenic'}
+                    </span>
                   </p>
                 </div>
 
