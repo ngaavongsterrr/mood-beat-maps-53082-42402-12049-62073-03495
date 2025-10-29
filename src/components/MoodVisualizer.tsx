@@ -138,7 +138,6 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
   // Auto-sync playlist from localStorage and handle location changes
   useEffect(() => {
     const updateFromStorage = () => {
-      const isSpotifyActive = localStorage.getItem('spotifyPlaylistActive') === 'true';
       const savedCategory = localStorage.getItem('selectedPlaylistCategory');
       const savedLocation = localStorage.getItem('selectedLocationTitle') || '';
       const savedPlaylistName = localStorage.getItem('selectedSpotifyPlaylistName') || '';
@@ -146,10 +145,9 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
       setCurrentLocationTitle(savedLocation);
       setCurrentSpotifyPlaylist(savedPlaylistName);
       
-      if (isSpotifyActive && savedCategory) {
-        // Find playlist matching the exact category stored (most recent opened)
+      // If Spotify playlist was opened, auto-sync to that category
+      if (savedCategory) {
         const matchingPlaylist = mockPlaylists.find(p => {
-          // Match based on category property
           return savedCategory === 'peaceful' && p.name.includes('Garden') ||
                  savedCategory === 'social' && p.name.includes('Coffee') ||
                  savedCategory === 'scenic' && p.name.includes('Epic');
@@ -157,17 +155,14 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
         
         if (matchingPlaylist) {
           setSelectedPlaylist(matchingPlaylist.id);
-          setHasValidSelection(true);
-        } else {
-          setHasValidSelection(false);
         }
-      } else {
-        // No valid Spotify selection - keep visualizer disabled
-        if (mockPlaylists[0]) {
-          setSelectedPlaylist(mockPlaylists[0].id);
-        }
-        setHasValidSelection(false);
+      } else if (mockPlaylists[0]) {
+        // Default to first playlist
+        setSelectedPlaylist(mockPlaylists[0].id);
       }
+      
+      // Always enable visualizer if a playlist is selected
+      setHasValidSelection(true);
     };
 
     updateFromStorage();
@@ -190,14 +185,16 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
       
       if (matchingPlaylist) {
         setSelectedPlaylist(matchingPlaylist.id);
-        setHasValidSelection(true);
       }
+      
+      // Visualizer is always enabled
+      setHasValidSelection(true);
     };
     
     // Listen for location changes to reset state
     const handleLocationChanged = () => {
       setSelectedPlaylist(mockPlaylists[0]?.id || '');
-      setHasValidSelection(false);
+      setHasValidSelection(true); // Keep enabled for new location
       setCurrentLocationTitle('');
       setCurrentSpotifyPlaylist('');
       setMoodEntries([]);
@@ -649,31 +646,14 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
   return (
     <div className="relative w-full h-full min-h-[300px] rounded-lg overflow-hidden bg-black/80 backdrop-blur-sm">
       {/* Playlist Selector */}
-      <div className={`absolute top-4 left-4 z-30 ${!hasValidSelection ? 'animate-pulse' : ''}`}
-           style={!hasValidSelection ? { boxShadow: '0 0 0 2px rgba(239, 68, 68, 0.6)' } : {}}>
+      <div className="absolute top-4 left-4 z-30">
         <Select 
           value={selectedPlaylist} 
           onValueChange={(val) => {
             setSelectedPlaylist(val);
-            
-            // Validate if manual selection matches stored Spotify playlist category
-            const isSpotifyActive = localStorage.getItem('spotifyPlaylistActive') === 'true';
-            const savedCategory = localStorage.getItem('selectedPlaylistCategory');
-            const selectedPlaylistData = mockPlaylists.find(p => p.id === val);
-            
-            if (isSpotifyActive && savedCategory && selectedPlaylistData) {
-              // Check if manually selected playlist matches the active Spotify category
-              const categoryMatch = 
-                (savedCategory === 'peaceful' && selectedPlaylistData.name.includes('Garden')) ||
-                (savedCategory === 'social' && selectedPlaylistData.name.includes('Coffee')) ||
-                (savedCategory === 'scenic' && selectedPlaylistData.name.includes('Epic'));
-              setHasValidSelection(categoryMatch);
-            } else {
-              // No active Spotify playlist - keep disabled
-              setHasValidSelection(false);
-            }
+            // Any valid playlist selection enables the visualizer
+            setHasValidSelection(true);
           }}
-          disabled={!hasValidSelection}
         >
           <SelectTrigger className="w-[200px] bg-black/60 backdrop-blur-md border-white/20 text-white">
             <SelectValue placeholder="Select playlist" />
@@ -699,16 +679,6 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
         onClick={handleCanvasClick}
       />
 
-      {/* Lightbox when no valid selection */}
-      {!hasValidSelection && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20 animate-fade-in">
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 max-w-[200px] text-center">
-            <p className="text-xs text-white/90">
-              Please open a playlist in Spotify from the Playlists tab first
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Periodic Reminder */}
       {showReminder && !selectedMood && !showOverlay && (
