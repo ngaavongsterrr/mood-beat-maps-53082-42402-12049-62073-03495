@@ -135,14 +135,19 @@ const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
                         variant="ghost"
                         className="gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={() => {
-                          // Store playlist selection for Mood Visualizer auto-sync
+                          // Store exact playlist data for accurate syncing
                           localStorage.setItem('selectedPlaylistCategory', playlist.category);
-                          localStorage.setItem('selectedSpotifyPlaylist', playlist.name);
+                          localStorage.setItem('selectedSpotifyPlaylistName', playlist.name);
                           localStorage.setItem('selectedLocationTitle', spot.name);
+                          localStorage.setItem('spotifyPlaylistActive', 'true');
                           
                           // Dispatch custom event to trigger instant update in MoodVisualizer
                           window.dispatchEvent(new CustomEvent('spotifyPlaylistSelected', {
-                            detail: { category: playlist.category, playlistName: playlist.name }
+                            detail: { 
+                              category: playlist.category, 
+                              playlistName: playlist.name,
+                              locationName: spot.name
+                            }
                           }));
                           
                           const spotifyAppUrl = playlist.spotifyUrl.replace('/embed/', '/');
