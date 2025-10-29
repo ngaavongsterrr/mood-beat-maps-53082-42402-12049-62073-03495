@@ -132,15 +132,22 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
   const reminderTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const [hasValidSelection, setHasValidSelection] = useState(false);
+  const [currentLocationTitle, setCurrentLocationTitle] = useState<string>('');
+  const [currentSpotifyPlaylist, setCurrentSpotifyPlaylist] = useState<string>('');
   
-  // Auto-sync playlist from localStorage (from Spotify button click)
+  // Auto-sync playlist from localStorage and handle location changes
   useEffect(() => {
     const updateFromStorage = () => {
       const isSpotifyActive = localStorage.getItem('spotifyPlaylistActive') === 'true';
       const savedCategory = localStorage.getItem('selectedPlaylistCategory');
+      const savedLocation = localStorage.getItem('selectedLocationTitle') || '';
+      const savedPlaylistName = localStorage.getItem('selectedSpotifyPlaylistName') || '';
+      
+      setCurrentLocationTitle(savedLocation);
+      setCurrentSpotifyPlaylist(savedPlaylistName);
       
       if (isSpotifyActive && savedCategory) {
-        // Find playlist matching the exact category stored
+        // Find playlist matching the exact category stored (most recent opened)
         const matchingPlaylist = mockPlaylists.find(p => {
           // Match based on category property
           return savedCategory === 'peaceful' && p.name.includes('Garden') ||
@@ -168,7 +175,11 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
     // Listen for Spotify playlist selection events for instant refresh
     const handleSpotifySelection = (event: Event) => {
       const customEvent = event as CustomEvent;
-      const { category: newCategory } = customEvent.detail;
+      const { category: newCategory, playlistName, locationName } = customEvent.detail;
+      
+      // Update location and playlist info
+      setCurrentLocationTitle(locationName);
+      setCurrentSpotifyPlaylist(playlistName);
       
       // Immediately update to match new selection
       const matchingPlaylist = mockPlaylists.find(p => {
@@ -182,9 +193,25 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
         setHasValidSelection(true);
       }
     };
+    
+    // Listen for location changes to reset state
+    const handleLocationChanged = () => {
+      setSelectedPlaylist(mockPlaylists[0]?.id || '');
+      setHasValidSelection(false);
+      setCurrentLocationTitle('');
+      setCurrentSpotifyPlaylist('');
+      setMoodEntries([]);
+      setCurrentStage('before');
+      setSelectedMood(null);
+      moodRef.current = null;
+    };
 
     window.addEventListener('spotifyPlaylistSelected', handleSpotifySelection);
-    return () => window.removeEventListener('spotifyPlaylistSelected', handleSpotifySelection);
+    window.addEventListener('locationChanged', handleLocationChanged);
+    return () => {
+      window.removeEventListener('spotifyPlaylistSelected', handleSpotifySelection);
+      window.removeEventListener('locationChanged', handleLocationChanged);
+    };
   }, []);
 
   useEffect(() => {
@@ -552,15 +579,15 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
     };
     
     // Get stored data
-    const playlistCategoryName = localStorage.getItem('selectedPlaylistCategory') || category;
-    const spotifyPlaylistName = localStorage.getItem('selectedSpotifyPlaylistName') || playlist?.name || '';
-    const locationTitle = localStorage.getItem('selectedLocationTitle') || 'Unknown Location';
+    const playlistCategoryName = currentLocationTitle;
+    const spotifyPlaylistName = currentSpotifyPlaylist;
+    const locationTitle = currentLocationTitle;
     
     // Create journal entry
     const journalEntry = {
       id: `journey-${Date.now()}`,
       locationTitle,
-      playlistName: playlist?.name,
+      playlistName: spotifyPlaylistName,
       playlistCategoryName,
       spotifyPlaylistName,
       category,
@@ -789,7 +816,7 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
                 Category: {localStorage.getItem('selectedPlaylistCategory') || category}
               </p>
               <p className="text-xs text-muted-foreground italic">
-                Spotify: {localStorage.getItem('selectedSpotifyPlaylistName') || mockPlaylists.find(p => p.id === selectedPlaylist)?.name || ''}
+                Spotify: {currentSpotifyPlaylist || mockPlaylists.find(p => p.id === selectedPlaylist)?.name || ''}
               </p>
 
               {/* Mood journey progress */}

@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Music, Sparkles, Navigation, Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { type Spot, getCategoryLabel, type SpotCategory } from '@/data/spots';
+import { type Spot, getCategoryLabel, type SpotCategory, type Playlist } from '@/data/spots';
 import MoodVisualizer from './MoodVisualizer';
 
 interface SpotDetailsModalProps {
@@ -14,6 +14,17 @@ interface SpotDetailsModalProps {
 
 const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
   const [selectedPlaylistCategory, setSelectedPlaylistCategory] = useState<SpotCategory | null>(null);
+  
+  // Clear previous location data when a new location is selected
+  useEffect(() => {
+    localStorage.removeItem('selectedPlaylistCategory');
+    localStorage.removeItem('selectedSpotifyPlaylistName');
+    localStorage.removeItem('selectedLocationTitle');
+    localStorage.removeItem('spotifyPlaylistActive');
+    
+    // Dispatch event to reset mood visualizer
+    window.dispatchEvent(new CustomEvent('locationChanged'));
+  }, [spot.id]);
 
   const filteredPlaylists = selectedPlaylistCategory
     ? spot.playlists.filter(p => p.category === selectedPlaylistCategory)
@@ -135,16 +146,16 @@ const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
                         variant="ghost"
                         className="gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={() => {
-                          // Store exact playlist data for accurate syncing
+                          // Store exact playlist data for accurate syncing with its specific category
                           localStorage.setItem('selectedPlaylistCategory', playlist.category);
                           localStorage.setItem('selectedSpotifyPlaylistName', playlist.name);
                           localStorage.setItem('selectedLocationTitle', spot.name);
                           localStorage.setItem('spotifyPlaylistActive', 'true');
                           
-                          // Dispatch custom event to trigger instant update in MoodVisualizer
+                          // Dispatch custom event with playlist-specific category for instant update
                           window.dispatchEvent(new CustomEvent('spotifyPlaylistSelected', {
                             detail: { 
-                              category: playlist.category, 
+                              category: playlist.category,
                               playlistName: playlist.name,
                               locationName: spot.name
                             }
