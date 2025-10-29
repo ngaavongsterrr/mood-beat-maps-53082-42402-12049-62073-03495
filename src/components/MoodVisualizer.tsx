@@ -7,6 +7,7 @@ import { X, Save, Camera } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import CustomEmoji from './CustomEmoji';
 import html2canvas from 'html2canvas';
+import { useSpotifyAuth } from '@/hooks/useSpotifyAuth';
 
 interface MoodVisualizerProps {
   category: SpotCategory;
@@ -132,43 +133,95 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
   const reminderTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const [hasValidSelection, setHasValidSelection] = useState(false);
+  const [isSpotifyPlaylistPlaying, setIsSpotifyPlaylistPlaying] = useState(false);
+  const { isAuthenticated, currentPlayback, login, isLoading, handleCallback } = useSpotifyAuth();
   
-  // Auto-sync playlist from localStorage (from Spotify button click)
+  // Handle Spotify callback
   useEffect(() => {
-    const updateFromStorage = () => {
-      const savedCategory = localStorage.getItem('selectedPlaylistCategory');
-      if (savedCategory) {
-        // Find a playlist matching the saved category
-        const matchingPlaylist = mockPlaylists.find(p => {
-          const categoryMatch = p.name.toLowerCase().includes(savedCategory.toLowerCase()) ||
-                              (savedCategory === 'social' && p.name.includes('Coffee')) ||
-                              (savedCategory === 'peaceful' && p.name.includes('Garden')) ||
-                              (savedCategory === 'scenic' && p.name.includes('Epic'));
-          return categoryMatch;
-        });
-        if (matchingPlaylist) {
-          setSelectedPlaylist(matchingPlaylist.id);
-          setHasValidSelection(true);
-        }
+    if (window.location.hash.includes('access_token')) {
+      handleCallback();
+    }
+  }, [handleCallback]);
+
+  // Check if Spotify is playing and matches selected category
+  useEffect(() => {
+    if (!isAuthenticated || !currentPlayback) {
+      setIsSpotifyPlaylistPlaying(false);
+      setHasValidSelection(false);
+      return;
+    }
+
+    // Check if user is actually playing music
+    if (!currentPlayback.is_playing || !currentPlayback.context) {
+      setIsSpotifyPlaylistPlaying(false);
+      setHasValidSelection(false);
+      toast({
+        title: "No music playing",
+        description: "Please play a Spotify playlist to enable the mood visualizer",
+      });
+      return;
+    }
+
+    // Get the currently playing context (playlist)
+    const playlistUri = currentPlayback.context?.uri;
+    const savedPlaylistName = localStorage.getItem('selectedSpotifyPlaylist');
+    const savedCategory = localStorage.getItem('selectedPlaylistCategory');
+
+    // If user clicked "+Open in Spotify", check if that playlist is playing
+    if (savedPlaylistName && savedCategory) {
+      // Here we'd ideally match the playlist URI with our stored data
+      // For now, we'll match by category and assume user is playing the right playlist
+      const matchingPlaylist = mockPlaylists.find(p => {
+        const categoryMatch = p.name.toLowerCase().includes(savedCategory.toLowerCase()) ||
+                            (savedCategory === 'social' && p.name.includes('Coffee')) ||
+                            (savedCategory === 'peaceful' && p.name.includes('Garden')) ||
+                            (savedCategory === 'scenic' && p.name.includes('Epic'));
+        return categoryMatch;
+      });
+
+      if (matchingPlaylist) {
+        setSelectedPlaylist(matchingPlaylist.id);
+        setIsSpotifyPlaylistPlaying(true);
+        setHasValidSelection(true);
       } else {
-        // Default to first playlist but require user to confirm selection
-        if (mockPlaylists[0]) {
-          setSelectedPlaylist(mockPlaylists[0].id);
-          setHasValidSelection(false);
+        setIsSpotifyPlaylistPlaying(false);
+        setHasValidSelection(false);
+      }
+    } else {
+      // No playlist selected via "+Open in Spotify"
+      setIsSpotifyPlaylistPlaying(false);
+      setHasValidSelection(false);
+    }
+  }, [isAuthenticated, currentPlayback, category, toast]);
+
+  // Auto-sync playlist from Spotify selection events
+  useEffect(() => {
+    const handleSpotifySelection = (event: any) => {
+      const { category: selectedCategory, playlistName } = event.detail;
+      
+      // Find matching playlist in our list
+      const matchingPlaylist = mockPlaylists.find(p => {
+        const categoryMatch = p.name.toLowerCase().includes(selectedCategory.toLowerCase()) ||
+                            (selectedCategory === 'social' && p.name.includes('Coffee')) ||
+                            (selectedCategory === 'peaceful' && p.name.includes('Garden')) ||
+                            (selectedCategory === 'scenic' && p.name.includes('Epic'));
+        return categoryMatch;
+      });
+
+      if (matchingPlaylist) {
+        setSelectedPlaylist(matchingPlaylist.id);
+        
+        // Only enable if Spotify is actually playing
+        if (isAuthenticated && currentPlayback?.is_playing) {
+          setHasValidSelection(true);
+          setIsSpotifyPlaylistPlaying(true);
         }
       }
     };
 
-    updateFromStorage();
-
-    // Listen for Spotify playlist selection events for instant refresh
-    const handleSpotifySelection = () => {
-      updateFromStorage();
-    };
-
     window.addEventListener('spotifyPlaylistSelected', handleSpotifySelection);
     return () => window.removeEventListener('spotifyPlaylistSelected', handleSpotifySelection);
-  }, [category]);
+  }, [isAuthenticated, currentPlayback]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -604,26 +657,31 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
 
   return (
     <div className="relative w-full h-full min-h-[300px] rounded-lg overflow-hidden bg-black/80 backdrop-blur-sm">
+      {/* Spotify Authentication Prompt */}
+      {!isAuthenticated && (
+        <div className="absolute inset-0 flex items-center justify-center z-40 bg-black/80 backdrop-blur-md">
+          <div className="bg-background/95 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-white/10 max-w-md mx-4 text-center space-y-4">
+            <h3 className="text-xl font-semibold">Connect to Spotify</h3>
+            <p className="text-sm text-muted-foreground">
+              Connect your Spotify account to enable the mood visualizer and track your listening experience in real-time.
+            </p>
+            <Button onClick={login} className="w-full gap-2" size="lg">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+              </svg>
+              Connect Spotify
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              You'll need to authorize access to see what you're currently playing
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Playlist Selector */}
       <div className={`absolute top-4 left-4 z-30 ${!hasValidSelection ? 'animate-pulse' : ''}`}
            style={!hasValidSelection ? { boxShadow: '0 0 0 2px rgba(239, 68, 68, 0.6)' } : {}}>
-        <Select value={selectedPlaylist} onValueChange={(val) => {
-          setSelectedPlaylist(val);
-          
-          // Validate if manual selection matches stored Spotify playlist
-          const savedCategory = localStorage.getItem('selectedPlaylistCategory');
-          const selectedPlaylistData = mockPlaylists.find(p => p.id === val);
-          
-          if (savedCategory && selectedPlaylistData) {
-            const categoryMatch = selectedPlaylistData.name.toLowerCase().includes(savedCategory.toLowerCase()) ||
-                                (savedCategory === 'social' && selectedPlaylistData.name.includes('Coffee')) ||
-                                (savedCategory === 'peaceful' && selectedPlaylistData.name.includes('Garden')) ||
-                                (savedCategory === 'scenic' && selectedPlaylistData.name.includes('Epic'));
-            setHasValidSelection(categoryMatch);
-          } else {
-            setHasValidSelection(true);
-          }
-        }}>
+        <Select value={selectedPlaylist} onValueChange={setSelectedPlaylist} disabled={!hasValidSelection}>
           <SelectTrigger className="w-[200px] bg-black/60 backdrop-blur-md border-white/20 text-white">
             <SelectValue placeholder="Select playlist" />
           </SelectTrigger>
@@ -635,9 +693,15 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
             ))}
           </SelectContent>
         </Select>
-        {currentPlaylist && (
+        {currentPlaylist && hasValidSelection && (
           <p className="text-xs text-white/60 mt-1">
             {currentPlaylist.songs.length} songs • {currentPlaylist.dominantMood}
+          </p>
+        )}
+        {isAuthenticated && currentPlayback?.item && (
+          <p className="text-xs text-green-400 mt-1 flex items-center gap-1">
+            <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+            Now Playing: {currentPlayback.item.name}
           </p>
         )}
       </div>
@@ -649,11 +713,13 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
       />
 
       {/* Lightbox when no valid selection */}
-      {!hasValidSelection && (
+      {!hasValidSelection && isAuthenticated && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20 animate-fade-in">
           <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 max-w-[200px] text-center">
             <p className="text-xs text-white/90">
-              Please select your playlist category above
+              {!currentPlayback?.is_playing 
+                ? "Play a Spotify playlist to begin"
+                : "Click '+Open in Spotify' on a playlist that matches what you're playing"}
             </p>
           </div>
         </div>
