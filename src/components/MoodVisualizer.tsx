@@ -894,13 +894,41 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
 
       {/* Save Confirmation */}
       {showSaveConfirmation && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-          <div className="bg-background/90 backdrop-blur-md rounded-2xl px-8 py-6 shadow-lg border border-white/10 animate-scale-in">
-            <p className="text-lg font-medium text-foreground flex items-center gap-3">
-              <Save className="w-5 h-5 text-primary" />
-              Journey saved to journal! 
-              <span className="text-2xl">🎵</span>
-            </p>
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center animate-fade-in z-20">
+          <div className="bg-background/95 backdrop-blur-sm rounded-2xl p-8 shadow-2xl border border-white/10 max-w-md mx-4 animate-scale-in relative">
+            <div className="text-center space-y-4">
+              <div className="flex justify-center mb-2">
+                <Save className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-lg font-medium text-foreground">
+                Journey Saved! 🎵
+              </h3>
+              <div className={`flex justify-center mb-4 ${emotions.find(e => e.id === selectedMood)?.animation}`}>
+                <CustomEmoji type={selectedMood || 'neutral'} size={64} />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Category: {localStorage.getItem('selectedPlaylistCategory') || category}
+              </p>
+              <p className="text-xs text-muted-foreground italic">
+                Spotify: {currentSpotifyPlaylist || mockPlaylists.find(p => p.id === selectedPlaylist)?.name || ''}
+              </p>
+
+              {/* Mood journey progress */}
+              <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                  Your Journey
+                </h4>
+                {moodEntries.map((entry) => (
+                  <div key={entry.stage} className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground capitalize">{entry.stage}:</span>
+                    <span className="flex items-center gap-2">
+                      <CustomEmoji type={entry.emotion} size={24} />
+                      <span className="text-sm font-medium text-foreground">{emotions.find(e => e.id === entry.emotion)?.label}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
