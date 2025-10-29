@@ -606,10 +606,10 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
       after: moodEntries.find(e => e.stage === 'after')
     };
     
-    // Get stored data
-    const playlistCategoryName = currentLocationTitle;
-    const spotifyPlaylistName = currentSpotifyPlaylist;
-    const locationTitle = currentLocationTitle;
+    // Get stored data and selected playlist info
+    const playlistCategoryName = playlist?.name || ''; // The dropdown selection (e.g., "Coffeeshop Vibes")
+    const spotifyPlaylistName = currentSpotifyPlaylist || ''; // The actual Spotify playlist name
+    const locationTitle = currentLocationTitle || 'Unknown Location'; // Use location or "Unknown Location"
     
     // Create journal entry
     const journalEntry = {
