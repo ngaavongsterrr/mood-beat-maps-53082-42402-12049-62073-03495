@@ -135,34 +135,69 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
   const [currentLocationTitle, setCurrentLocationTitle] = useState<string>('');
   const [currentSpotifyPlaylist, setCurrentSpotifyPlaylist] = useState<string>('');
   
+  // Category mapping for playlists
+  const playlistCategories = {
+    peaceful: ['Garden Serenity', 'Nature Sounds', 'Classical Focus', 'Museum Ambience'],
+    social: ['Coffeeshop Vibes', 'Social Gathering', 'Shopping Beats', 'Urban Energy'],
+    scenic: ['Epic Views', 'Adventure time', 'Sunset Chill', 'Lakeside Lounge']
+  };
+  
+  // Helper function to get category of a playlist by name
+  const getPlaylistCategory = (playlistName: string): 'peaceful' | 'social' | 'scenic' | null => {
+    for (const [category, names] of Object.entries(playlistCategories)) {
+      if (names.some(name => playlistName.includes(name))) {
+        return category as 'peaceful' | 'social' | 'scenic';
+      }
+    }
+    return null;
+  };
+  
+  // Validate that dropdown selection matches active Spotify category
+  const validateSelection = (playlistId: string): boolean => {
+    const spotifyActive = localStorage.getItem('spotifyPlaylistActive') === 'true';
+    if (!spotifyActive) return false;
+    
+    const activeSpotifyCategory = localStorage.getItem('selectedPlaylistCategory');
+    if (!activeSpotifyCategory) return false;
+    
+    const selectedPlaylist = mockPlaylists.find(p => p.id === playlistId);
+    if (!selectedPlaylist) return false;
+    
+    const selectedCategory = getPlaylistCategory(selectedPlaylist.name);
+    return selectedCategory === activeSpotifyCategory;
+  };
+  
   // Auto-sync playlist from localStorage and handle location changes
   useEffect(() => {
     const updateFromStorage = () => {
       const savedCategory = localStorage.getItem('selectedPlaylistCategory');
       const savedLocation = localStorage.getItem('selectedLocationTitle') || '';
       const savedPlaylistName = localStorage.getItem('selectedSpotifyPlaylistName') || '';
+      const spotifyActive = localStorage.getItem('spotifyPlaylistActive') === 'true';
       
       setCurrentLocationTitle(savedLocation);
       setCurrentSpotifyPlaylist(savedPlaylistName);
       
-      // If Spotify playlist was opened, auto-sync to that category
-      if (savedCategory) {
-        const matchingPlaylist = mockPlaylists.find(p => {
-          return savedCategory === 'peaceful' && p.name.includes('Garden') ||
-                 savedCategory === 'social' && p.name.includes('Coffee') ||
-                 savedCategory === 'scenic' && p.name.includes('Epic');
-        });
+      // If Spotify playlist was opened, auto-sync to matching playlist in dropdown
+      if (savedCategory && spotifyActive) {
+        // Find first playlist that matches the category
+        const matchingPlaylist = mockPlaylists.find(p => 
+          getPlaylistCategory(p.name) === savedCategory
+        );
         
         if (matchingPlaylist) {
           setSelectedPlaylist(matchingPlaylist.id);
+          setHasValidSelection(true);
+        } else {
+          setHasValidSelection(false);
         }
-      } else if (mockPlaylists[0]) {
-        // Default to first playlist
-        setSelectedPlaylist(mockPlaylists[0].id);
+      } else {
+        // No active Spotify playlist, disable visualizer
+        if (mockPlaylists[0]) {
+          setSelectedPlaylist(mockPlaylists[0].id);
+        }
+        setHasValidSelection(false);
       }
-      
-      // Always enable visualizer if a playlist is selected
-      setHasValidSelection(true);
     };
 
     updateFromStorage();
@@ -177,24 +212,20 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
       setCurrentSpotifyPlaylist(playlistName);
       
       // Immediately update to match new selection
-      const matchingPlaylist = mockPlaylists.find(p => {
-        return newCategory === 'peaceful' && p.name.includes('Garden') ||
-               newCategory === 'social' && p.name.includes('Coffee') ||
-               newCategory === 'scenic' && p.name.includes('Epic');
-      });
+      const matchingPlaylist = mockPlaylists.find(p => 
+        getPlaylistCategory(p.name) === newCategory
+      );
       
       if (matchingPlaylist) {
         setSelectedPlaylist(matchingPlaylist.id);
+        setHasValidSelection(true);
       }
-      
-      // Visualizer is always enabled
-      setHasValidSelection(true);
     };
     
     // Listen for location changes to reset state
     const handleLocationChanged = () => {
       setSelectedPlaylist(mockPlaylists[0]?.id || '');
-      setHasValidSelection(true); // Keep enabled for new location
+      setHasValidSelection(false); // Disable until new Spotify playlist opened
       setCurrentLocationTitle('');
       setCurrentSpotifyPlaylist('');
       setMoodEntries([]);
@@ -651,8 +682,9 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
           value={selectedPlaylist} 
           onValueChange={(val) => {
             setSelectedPlaylist(val);
-            // Any valid playlist selection enables the visualizer
-            setHasValidSelection(true);
+            // Validate that selection matches active Spotify category
+            const isValid = validateSelection(val);
+            setHasValidSelection(isValid);
           }}
         >
           <SelectTrigger className="w-[200px] bg-black/60 backdrop-blur-md border-white/20 text-white">
@@ -678,6 +710,20 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
         className="w-full h-full cursor-pointer"
         onClick={handleCanvasClick}
       />
+
+      {/* Disabled Overlay */}
+      {!hasValidSelection && (
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-20 border-4 border-red-500/50 animate-pulse">
+          <div className="text-center space-y-4 px-8">
+            <p className="text-white text-lg font-semibold">
+              🎵 Mood Visualizer Disabled
+            </p>
+            <p className="text-white/70 text-sm max-w-md">
+              Please open a playlist in Spotify from the Playlists tab first, then select a matching category from the dropdown above
+            </p>
+          </div>
+        </div>
+      )}
 
 
       {/* Periodic Reminder */}
