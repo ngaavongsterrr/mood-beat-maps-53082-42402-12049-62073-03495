@@ -33,15 +33,61 @@ const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
   const categories: SpotCategory[] = ['peaceful', 'social', 'scenic'];
 
   const handleNavigate = () => {
-    const { latitude, longitude } = spot;
+    const { latitude, longitude, name } = spot;
+    const encodedLabel = encodeURIComponent(name);
     
-    // Detect if user is on iOS device
+    // Detect device type
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    const isMobile = isIOS || isAndroid;
     
-    // Create appropriate map URL
-    const mapUrl = isIOS
-      ? `http://maps.apple.com/?daddr=${latitude},${longitude}`
-      : `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+    // Build navigation URL with proper fallbacks
+    let mapUrl: string;
+    
+    if (isIOS) {
+      // iOS: Try Google Maps Universal Link first, fallback to Apple Maps
+      // Universal Link opens Google Maps app if installed, else browser
+      mapUrl = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+      
+      // Alternative: Try comgooglemaps:// scheme first (requires detection)
+      const googleMapsScheme = `comgooglemaps://?daddr=${latitude},${longitude}&directionsmode=walking`;
+      
+      // Try Google Maps app scheme, fallback to Universal Link
+      const testLink = document.createElement('a');
+      testLink.href = googleMapsScheme;
+      
+      // Check if Google Maps is likely installed (simplified check)
+      try {
+        window.location.href = googleMapsScheme;
+        setTimeout(() => {
+          // If still here after 500ms, Google Maps not installed, use Universal Link
+          window.open(mapUrl, '_blank');
+        }, 500);
+        return;
+      } catch {
+        // Fallback to Universal Link
+        mapUrl = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+      }
+    } else if (isAndroid) {
+      // Android: Use geo URI scheme (opens default maps app)
+      mapUrl = `geo:${latitude},${longitude}?q=${latitude},${longitude}(${encodedLabel})`;
+      
+      // Fallback to Google Maps URL if geo scheme fails
+      const fallbackUrl = `https://maps.google.com/?q=${latitude},${longitude}`;
+      
+      try {
+        window.location.href = mapUrl;
+        setTimeout(() => {
+          window.open(fallbackUrl, '_blank');
+        }, 500);
+        return;
+      } catch {
+        mapUrl = fallbackUrl;
+      }
+    } else {
+      // Desktop: Google Maps with directions
+      mapUrl = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+    }
     
     // Open in new tab
     window.open(mapUrl, '_blank');
