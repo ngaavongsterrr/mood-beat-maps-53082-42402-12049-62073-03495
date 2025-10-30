@@ -14,6 +14,7 @@ interface SpotDetailsModalProps {
 
 const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
   const [selectedPlaylistCategory, setSelectedPlaylistCategory] = useState<SpotCategory | null>(null);
+  const [playlistOpened, setPlaylistOpened] = useState(false);
   
   // Clear previous location data when a new location is selected
   useEffect(() => {
@@ -21,6 +22,9 @@ const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
     localStorage.removeItem('selectedSpotifyPlaylistName');
     localStorage.removeItem('selectedLocationTitle');
     localStorage.removeItem('spotifyPlaylistActive');
+    
+    // Reset playlist opened state
+    setPlaylistOpened(false);
     
     // Dispatch event to reset mood visualizer
     window.dispatchEvent(new CustomEvent('locationChanged'));
@@ -132,7 +136,8 @@ const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
           {/* Navigation Button */}
           <Button 
             onClick={handleNavigate}
-            className="w-full gap-2"
+            disabled={!playlistOpened}
+            className="w-full gap-2 transition-opacity duration-250 ease-in-out"
             size="lg"
           >
             <Navigation className="w-5 h-5" />
@@ -197,6 +202,9 @@ const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
                           localStorage.setItem('selectedSpotifyPlaylistName', playlist.name);
                           localStorage.setItem('selectedLocationTitle', spot.name);
                           localStorage.setItem('spotifyPlaylistActive', 'true');
+                          
+                          // Enable navigation button
+                          setPlaylistOpened(true);
                           
                           // Dispatch custom event with playlist-specific category for instant update
                           window.dispatchEvent(new CustomEvent('spotifyPlaylistSelected', {
