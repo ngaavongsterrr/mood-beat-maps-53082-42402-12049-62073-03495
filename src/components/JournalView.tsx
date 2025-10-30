@@ -196,7 +196,10 @@ const JournalView = ({ selectedCategory, onCategoryChange }: JournalViewProps) =
                     variant="ghost"
                     size="icon"
                     className="absolute -top-1 -right-1 h-8 w-8"
-                    onClick={() => handleEditCard(card)}
+                    onClick={() => {
+                      handleEditCard(card);
+                      window.dispatchEvent(new CustomEvent('tutorial-journal-edit'));
+                    }}
                   >
                     <Edit2 className="h-4 w-4" />
                   </Button>
@@ -228,6 +231,7 @@ const JournalView = ({ selectedCategory, onCategoryChange }: JournalViewProps) =
                       } else {
                         handlePhotoUpload(card.id);
                       }
+                      window.dispatchEvent(new CustomEvent('tutorial-journal-edit'));
                     }}
                   >
                     <Image className="w-4 h-4 mr-2" />

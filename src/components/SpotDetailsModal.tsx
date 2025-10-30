@@ -215,6 +215,9 @@ const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
                             }
                           }));
                           
+                          // Dispatch tutorial event when Spotify is opened
+                          window.dispatchEvent(new CustomEvent('tutorial-spotify-open'));
+                          
                           const spotifyAppUrl = playlist.spotifyUrl.replace('/embed/', '/');
                           window.open(spotifyAppUrl, '_blank');
                         }}
@@ -223,7 +226,7 @@ const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
                         Open in Spotify
                       </Button>
                     </div>
-                    <div className="aspect-[16/9] w-full rounded-lg overflow-hidden bg-muted">
+                     <div className="aspect-[16/9] w-full rounded-lg overflow-hidden bg-muted">
                       <iframe
                         src={playlist.spotifyUrl}
                         width="100%"
@@ -232,6 +235,10 @@ const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
                         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                         loading="lazy"
                         title={playlist.name}
+                        onLoad={() => {
+                          // Dispatch tutorial event when playlist is loaded/previewed
+                          window.dispatchEvent(new CustomEvent('tutorial-playlist-preview'));
+                        }}
                       />
                     </div>
                   </div>

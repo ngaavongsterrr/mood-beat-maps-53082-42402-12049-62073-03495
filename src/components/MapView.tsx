@@ -239,7 +239,10 @@ const MapView = ({ selectedCategory, onCategoryChange, mapMode }: MapViewProps) 
               return (
                 <button
                   key={spot.id}
-                  onClick={() => setSelectedSpot(spot)}
+                  onClick={() => {
+                    setSelectedSpot(spot);
+                    window.dispatchEvent(new CustomEvent('tutorial-pin-click'));
+                  }}
                   className="absolute transform -translate-x-1/2 -translate-y-full group"
                   style={position}
                   aria-label={`View ${spot.name}`}

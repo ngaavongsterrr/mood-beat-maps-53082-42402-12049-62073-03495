@@ -147,4 +147,23 @@ All colors MUST be HSL.
   .animate-glow-warm {
     animation: glow-warm 2s ease-in-out infinite;
   }
+
+  /* Tutorial highlight glow */
+  @keyframes tutorial-glow {
+    0%, 100% { 
+      box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4),
+                  0 0 0 0 hsl(var(--primary) / 0.2);
+    }
+    50% { 
+      box-shadow: 0 0 0 4px hsl(var(--primary) / 0.4),
+                  0 0 0 8px hsl(var(--primary) / 0.2);
+    }
+  }
+
+  .tutorial-highlight {
+    position: relative;
+    animation: tutorial-glow 2s ease-in-out infinite;
+    border-radius: var(--radius);
+    transition: all 0.25s ease-in-out;
+  }
 }

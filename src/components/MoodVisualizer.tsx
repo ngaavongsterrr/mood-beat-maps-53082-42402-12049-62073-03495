@@ -525,6 +525,9 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
     };
     setMoodEntries(prev => [...prev.filter(e => e.stage !== currentStage), newEntry]);
     
+    // Dispatch tutorial event when mood is selected
+    window.dispatchEvent(new CustomEvent('tutorial-mood-select'));
+    
     setShowConfirmation(true);
     
     // Trigger burst effect
@@ -650,6 +653,9 @@ const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => 
     
     setShowSubmitPrompt(false);
     setShowSaveConfirmation(true);
+    
+    // Dispatch tutorial event when journey is saved
+    window.dispatchEvent(new CustomEvent('tutorial-journey-save'));
     
     setTimeout(() => {
       setShowSaveConfirmation(false);
