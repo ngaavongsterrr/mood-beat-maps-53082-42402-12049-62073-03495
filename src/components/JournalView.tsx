@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 interface JournalViewProps {
   selectedCategory: string | null;
   onCategoryChange: (category: string | null) => void;
+  highlightElement?: (step: string) => boolean;
 }
 
 interface JournalCard {
@@ -34,7 +35,7 @@ interface JournalCard {
   };
 }
 
-const JournalView = ({ selectedCategory, onCategoryChange }: JournalViewProps) => {
+const JournalView = ({ selectedCategory, onCategoryChange, highlightElement }: JournalViewProps) => {
   const { toast } = useToast();
   const [journalCards, setJournalCards] = useState<JournalCard[]>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -219,7 +220,7 @@ const JournalView = ({ selectedCategory, onCategoryChange }: JournalViewProps) =
                 </div>
 
                 {/* Card Actions */}
-                <div className="flex gap-2 pt-2">
+                <div className={`flex gap-2 pt-2 ${highlightElement?.('journal-tab') ? 'tutorial-highlight rounded-lg' : ''}`}>
                   <Button 
                     variant="outline" 
                     size="sm" 

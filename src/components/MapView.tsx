@@ -8,9 +8,10 @@ interface MapViewProps {
   selectedCategory: string | null;
   onCategoryChange: (category: string | null) => void;
   mapMode: 'campus' | 'nationwide' | 'global';
+  highlightElement?: (step: string) => boolean;
 }
 
-const MapView = ({ selectedCategory, onCategoryChange, mapMode }: MapViewProps) => {
+const MapView = ({ selectedCategory, onCategoryChange, mapMode, highlightElement }: MapViewProps) => {
   const [selectedSpot, setSelectedSpot] = useState<Spot | null>(null);
   const [userLocationSpots, setUserLocationSpots] = useState<Spot[]>([]);
 
@@ -196,7 +197,7 @@ const MapView = ({ selectedCategory, onCategoryChange, mapMode }: MapViewProps) 
   return (
     <div className="relative h-full w-full">
       {/* Filter Bar */}
-      <div className="absolute top-0 left-0 right-0 z-20">
+      <div className={`absolute top-0 left-0 right-0 z-20 ${highlightElement?.('location-filter') ? 'tutorial-highlight' : ''}`}>
         <FilterBar 
           selectedCategory={selectedCategory} 
           onCategoryChange={onCategoryChange} 
@@ -239,11 +240,11 @@ const MapView = ({ selectedCategory, onCategoryChange, mapMode }: MapViewProps) 
               return (
                 <button
                   key={spot.id}
+                  className={`absolute transform -translate-x-1/2 -translate-y-full group ${highlightElement?.('location-pins') ? 'tutorial-highlight rounded-full' : ''}`}
                   onClick={() => {
                     setSelectedSpot(spot);
                     window.dispatchEvent(new CustomEvent('tutorial-pin-click'));
                   }}
-                  className="absolute transform -translate-x-1/2 -translate-y-full group"
                   style={position}
                   aria-label={`View ${spot.name}`}
                 >
@@ -272,6 +273,7 @@ const MapView = ({ selectedCategory, onCategoryChange, mapMode }: MapViewProps) 
         <SpotDetailsModal
           spot={selectedSpot}
           onClose={() => setSelectedSpot(null)}
+          highlightElement={highlightElement}
         />
       )}
     </div>

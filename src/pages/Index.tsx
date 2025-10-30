@@ -113,12 +113,14 @@ const Index = () => {
           <JournalView 
             selectedCategory={selectedCategory}
             onCategoryChange={setSelectedCategory}
+            highlightElement={highlightElement}
           />
         ) : (
           <MapView 
             selectedCategory={selectedCategory}
             onCategoryChange={setSelectedCategory}
             mapMode={mode}
+            highlightElement={highlightElement}
           />
         )}
       </div>
