@@ -10,6 +10,7 @@ export interface Playlist {
 export interface Spot {
   id: string;
   name: string;
+  address?: string;
   description: string;
   category: SpotCategory;
   latitude: number;
@@ -22,6 +23,7 @@ export const spots: Spot[] = [
   {
     id: '1',
     name: 'Prinsentuin Park',
+    address: 'Turfmarkt 11, 8911 KS Leeuwarden, Netherlands',
     description: 'A serene Renaissance garden perfect for peaceful contemplation and relaxation.',
     category: 'peaceful',
     latitude: 53.2012,
@@ -45,6 +47,7 @@ export const spots: Spot[] = [
   {
     id: '1a',
     name: 'Rengerspark',
+    address: 'Rengerspark, 8917 BS Leeuwarden, Netherlands',
     description: 'Beautiful park near NHL Stenden campus, perfect for studying outdoors or peaceful walks.',
     category: 'peaceful',
     latitude: 53.2028,
@@ -68,6 +71,7 @@ export const spots: Spot[] = [
   {
     id: '1b',
     name: 'Bruze Cafe Benches',
+    address: 'Rengerslaan 10, 8917 DD Leeuwarden, Netherlands',
     description: 'Cozy outdoor seating area near Bruze cafe, great spot for socializing with coffee.',
     category: 'social',
     latitude: 53.2022,
@@ -91,6 +95,7 @@ export const spots: Spot[] = [
   {
     id: '1c',
     name: 'Windmill Building Garden',
+    address: 'Rengerslaan 8, 8917 DD Leeuwarden, Netherlands',
     description: 'Scenic spot with windmill views, ideal for contemplative breaks between classes.',
     category: 'scenic',
     latitude: 53.2034,
@@ -114,6 +119,7 @@ export const spots: Spot[] = [
   {
     id: '1d',
     name: 'NHL Campus Courtyard',
+    address: 'Rengerslaan 8-10, 8917 DD Leeuwarden, Netherlands',
     description: 'Central quad with benches and sitting areas, perfect for group study or relaxing.',
     category: 'social',
     latitude: 53.2025,
@@ -137,6 +143,7 @@ export const spots: Spot[] = [
   {
     id: '2',
     name: 'Blokhuispoort',
+    address: 'Blokhuisplein 40, 8911 LJ Leeuwarden, Netherlands',
     description: 'Historic former prison transformed into a vibrant cultural hub with cafes and events.',
     category: 'social',
     latitude: 53.1998,
@@ -160,6 +167,7 @@ export const spots: Spot[] = [
   {
     id: '3',
     name: 'Oldehove Tower',
+    address: 'Oldehoofsterkerkhof 3, 8911 DH Leeuwarden, Netherlands',
     description: 'The iconic leaning tower offering stunning panoramic views of Leeuwarden.',
     category: 'scenic',
     latitude: 53.2015,
@@ -183,6 +191,7 @@ export const spots: Spot[] = [
   {
     id: '4',
     name: 'Fries Museum',
+    address: 'Wilhelminaplein 92, 8911 BS Leeuwarden, Netherlands',
     description: 'Modern museum showcasing Frisian culture, art, and history.',
     category: 'peaceful',
     latitude: 53.2020,
@@ -206,6 +215,7 @@ export const spots: Spot[] = [
   {
     id: '5',
     name: 'Grote Kerkstraat',
+    address: 'Grote Kerkstraat, 8911 DZ Leeuwarden, Netherlands',
     description: 'Bustling shopping street lined with boutiques, restaurants, and local charm.',
     category: 'social',
     latitude: 53.2005,
@@ -229,6 +239,7 @@ export const spots: Spot[] = [
   {
     id: '6',
     name: 'Potmarge Lake',
+    address: 'Potmarge, 8932 Leeuwarden, Netherlands',
     description: 'Tranquil waterfront perfect for walks, picnics, and sunset watching.',
     category: 'scenic',
     latitude: 53.1985,

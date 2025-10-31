@@ -20,155 +20,123 @@ const MapView = ({ selectedCategory, onCategoryChange, mapMode, highlightElement
     if (mapMode === 'nationwide' || mapMode === 'global') {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          (position) => {
+          async (position) => {
             const { latitude, longitude } = position.coords;
             
-            // Generate 6 nearby spots (2 per category) with realistic outdoor location names
-            const generatedSpots: Spot[] = [
-              // Peaceful locations
-              {
-                id: 'nearby-peaceful-1',
-                name: 'Botanical Garden',
-                description: 'A serene botanical sanctuary with carefully curated plant collections, ideal for meditation and quiet contemplation.',
-                category: 'peaceful',
-                latitude: latitude + 0.003,
-                longitude: longitude + 0.003,
-                image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&auto=format&fit=crop',
-                playlists: [
-                  {
-                    id: 'p1',
-                    name: 'Garden Serenity',
-                    spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DX4PP3DA4J0N8',
-                    category: 'peaceful'
-                  },
-                  {
-                    id: 'p2',
-                    name: 'Nature Sounds',
-                    spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DWZd79rJ6a7lp',
-                    category: 'peaceful'
-                  }
-                ]
-              },
-              {
-                id: 'nearby-peaceful-2',
-                name: 'Memorial Park',
-                description: 'A tranquil memorial park with reflective pathways and peaceful garden spaces, perfect for mindful walks.',
-                category: 'peaceful',
-                latitude: latitude + 0.0015,
-                longitude: longitude - 0.002,
-                image: 'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?w=800&auto=format&fit=crop',
-                playlists: [
-                  {
-                    id: 'p3',
-                    name: 'Classical Focus',
-                    spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DWWEJlAGA9gs0',
-                    category: 'peaceful'
-                  },
-                  {
-                    id: 'p4',
-                    name: 'Museum Ambience',
-                    spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DX0XUfTFmNBRM',
-                    category: 'peaceful'
-                  }
-                ]
-              },
-              // Social locations
-              {
-                id: 'nearby-social-1',
-                name: 'Market Square',
-                description: 'A lively public square with outdoor cafés and bustling market stalls, ideal for people-watching and socializing.',
-                category: 'social',
-                latitude: latitude - 0.002,
-                longitude: longitude + 0.0025,
-                image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&auto=format&fit=crop',
-                playlists: [
-                  {
-                    id: 'p5',
-                    name: 'Coffee Shop Vibes',
-                    spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DX4pUKG1kS0Ac',
-                    category: 'social'
-                  },
-                  {
-                    id: 'p6',
-                    name: 'Social Gathering',
-                    spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DWSf2RDTDayIx',
-                    category: 'social'
-                  }
-                ]
-              },
-              {
-                id: 'nearby-social-2',
-                name: 'Riverside Promenade',
-                description: 'A vibrant waterfront walkway with street performers and outdoor seating areas, great for connecting with others.',
-                category: 'social',
-                latitude: latitude - 0.001,
-                longitude: longitude - 0.0015,
-                image: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=800&auto=format&fit=crop',
-                playlists: [
-                  {
-                    id: 'p7',
-                    name: 'Shopping Beats',
-                    spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DWZeKCadgRdKQ',
-                    category: 'social'
-                  },
-                  {
-                    id: 'p8',
-                    name: 'Urban Energy',
-                    spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DX4pUKG1kS0Ac',
-                    category: 'social'
-                  }
-                ]
-              },
-              // Scenic locations
-              {
-                id: 'nearby-scenic-1',
-                name: 'Hilltop Viewpoint',
-                description: 'An elevated scenic overlook offering breathtaking panoramic views of the surrounding landscape and city skyline.',
-                category: 'scenic',
-                latitude: latitude - 0.0025,
-                longitude: longitude - 0.003,
-                image: 'https://images.unsplash.com/photo-1509048191080-d2984bad6ae5?w=800&auto=format&fit=crop',
-                playlists: [
-                  {
-                    id: 'p9',
-                    name: 'Epic Views',
-                    spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DX4sWSpwq3LiO',
-                    category: 'scenic'
-                  },
-                  {
-                    id: 'p10',
-                    name: 'Adventure Time',
-                    spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DWZeKCadgRdKQ',
-                    category: 'scenic'
-                  }
-                ]
-              },
-              {
-                id: 'nearby-scenic-2',
-                name: 'Lakeside Trail',
-                description: "A picturesque nature trail winding along the water's edge, offering stunning lake views and natural beauty.",
-                category: 'scenic',
-                latitude: latitude + 0.002,
-                longitude: longitude - 0.0025,
-                image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop',
-                playlists: [
-                  {
-                    id: 'p11',
-                    name: 'Sunset Chill',
-                    spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DX4pUKG1kS0Ac',
-                    category: 'scenic'
-                  },
-                  {
-                    id: 'p12',
-                    name: 'Lakeside Lounge',
-                    spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DWSf2RDTDayIx',
-                    category: 'scenic'
-                  }
-                ]
+            // Fetch nearby real locations using OpenStreetMap's Nominatim API
+            try {
+              const searchRadius = mapMode === 'global' ? 0.05 : 0.01; // ~5km for global, ~1km for nationwide
+              const categories = ['peaceful', 'social', 'scenic'] as const;
+              const generatedSpots: Spot[] = [];
+              
+              // Define search terms for each category
+              const searchTerms: Record<typeof categories[number], string[]> = {
+                peaceful: ['park', 'garden', 'green space', 'nature reserve'],
+                social: ['cafe', 'restaurant', 'square', 'market'],
+                scenic: ['viewpoint', 'landmark', 'monument', 'waterfront']
+              };
+              
+              // Fetch 2 locations for each category
+              for (const category of categories) {
+                const terms = searchTerms[category];
+                const spots = await Promise.all(
+                  terms.slice(0, 2).map(async (term, index) => {
+                    try {
+                      // Search for nearby POIs using Nominatim
+                      const response = await fetch(
+                        `https://nominatim.openstreetmap.org/search?` +
+                        `format=json&` +
+                        `q=${encodeURIComponent(term)}&` +
+                        `lat=${latitude}&` +
+                        `lon=${longitude}&` +
+                        `limit=1&` +
+                        `addressdetails=1`,
+                        {
+                          headers: {
+                            'User-Agent': 'SpotifyLocationApp/1.0'
+                          }
+                        }
+                      );
+                      
+                      if (!response.ok) throw new Error('Geocoding failed');
+                      
+                      const data = await response.json();
+                      if (data.length === 0) throw new Error('No results');
+                      
+                      const place = data[0];
+                      const displayName = place.display_name.split(',')[0]; // Get primary name
+                      const fullAddress = place.display_name;
+                      
+                      // Get appropriate image based on category
+                      const images = {
+                        peaceful: [
+                          'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&auto=format&fit=crop',
+                          'https://images.unsplash.com/photo-1519331379826-f10be5486c6f?w=800&auto=format&fit=crop'
+                        ],
+                        social: [
+                          'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&auto=format&fit=crop',
+                          'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=800&auto=format&fit=crop'
+                        ],
+                        scenic: [
+                          'https://images.unsplash.com/photo-1509048191080-d2984bad6ae5?w=800&auto=format&fit=crop',
+                          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop'
+                        ]
+                      };
+                      
+                      const descriptions = {
+                        peaceful: [
+                          'A serene outdoor space perfect for meditation and quiet contemplation.',
+                          'A tranquil location ideal for mindful walks and peaceful reflection.'
+                        ],
+                        social: [
+                          'A lively gathering spot perfect for people-watching and socializing.',
+                          'A vibrant social hub great for connecting with others and enjoying the atmosphere.'
+                        ],
+                        scenic: [
+                          'A picturesque location offering stunning views and natural beauty.',
+                          'An impressive landmark with breathtaking vistas and scenic surroundings.'
+                        ]
+                      };
+                      
+                      return {
+                        id: `nearby-${category}-${index}`,
+                        name: displayName,
+                        address: fullAddress,
+                        description: descriptions[category][index],
+                        category: category,
+                        latitude: parseFloat(place.lat),
+                        longitude: parseFloat(place.lon),
+                        image: images[category][index],
+                        playlists: [
+                          {
+                            id: `p${generatedSpots.length * 2 + 1}`,
+                            name: `${displayName} Mix`,
+                            spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DX4PP3DA4J0N8',
+                            category: category
+                          },
+                          {
+                            id: `p${generatedSpots.length * 2 + 2}`,
+                            name: `${category} Vibes`,
+                            spotifyUrl: 'https://open.spotify.com/embed/playlist/37i9dQZF1DWZd79rJ6a7lp',
+                            category: category
+                          }
+                        ]
+                      };
+                    } catch (error) {
+                      console.warn(`Failed to fetch ${term}:`, error);
+                      return null;
+                    }
+                  })
+                );
+                
+                generatedSpots.push(...spots.filter(s => s !== null) as Spot[]);
               }
-            ];
-            
-            setUserLocationSpots(generatedSpots);
+              
+              setUserLocationSpots(generatedSpots);
+            } catch (error) {
+              console.error('Error fetching nearby locations:', error);
+              setUserLocationSpots([]);
+            }
           },
           (error) => {
             console.warn('Geolocation error:', error);
