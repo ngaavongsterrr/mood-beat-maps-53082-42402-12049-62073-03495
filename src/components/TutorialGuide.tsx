@@ -82,16 +82,19 @@ const TutorialGuide = ({ currentStep, onDismiss, onComplete }: TutorialGuideProp
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none transition-opacity duration-250 ease-in-out ${
+      className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 transition-opacity duration-250 ease-in-out ${
         isVisible ? 'opacity-100' : 'opacity-0'
       }`}
     >
-      {/* Translucent backdrop */}
-      <div className="absolute inset-0 bg-background/60 backdrop-blur-sm pointer-events-auto" onClick={handleDismiss} />
+      {/* Backdrop - blocks all interactions */}
+      <div 
+        className="absolute inset-0 bg-background/80 backdrop-blur-sm" 
+        onClick={handleDismiss}
+      />
       
       {/* Tutorial pop-up */}
       <div
-        className={`relative max-w-md w-full bg-card/95 backdrop-blur-md rounded-2xl shadow-2xl border border-border p-6 pointer-events-auto transition-all duration-250 ease-in-out ${
+        className={`relative max-w-md w-full bg-card/95 backdrop-blur-md rounded-2xl shadow-2xl border border-border p-6 transition-all duration-250 ease-in-out ${
           isVisible ? 'scale-100' : 'scale-95'
         }`}
       >

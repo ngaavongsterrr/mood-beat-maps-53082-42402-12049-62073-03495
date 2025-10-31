@@ -39,63 +39,60 @@ const SpotDetailsModal = ({ spot, onClose, highlightElement }: SpotDetailsModalP
 
   const handleNavigate = () => {
     const { latitude, longitude, name } = spot;
-    const encodedLabel = encodeURIComponent(name);
+    const encodedName = encodeURIComponent(name);
     
     // Detect device type
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isAndroid = /Android/.test(navigator.userAgent);
-    const isMobile = isIOS || isAndroid;
-    
-    // Build navigation URL with proper fallbacks
-    let mapUrl: string;
     
     if (isIOS) {
-      // iOS: Try Google Maps Universal Link first, fallback to Apple Maps
-      // Universal Link opens Google Maps app if installed, else browser
-      mapUrl = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+      // iOS: Show options for Apple Maps, Google Maps, or Waze
+      const userChoice = confirm(
+        `Open "${name}" in:\n\nOK = Apple Maps\nCancel = Choose Google Maps or Waze`
+      );
       
-      // Alternative: Try comgooglemaps:// scheme first (requires detection)
-      const googleMapsScheme = `comgooglemaps://?daddr=${latitude},${longitude}&directionsmode=walking`;
-      
-      // Try Google Maps app scheme, fallback to Universal Link
-      const testLink = document.createElement('a');
-      testLink.href = googleMapsScheme;
-      
-      // Check if Google Maps is likely installed (simplified check)
-      try {
-        window.location.href = googleMapsScheme;
-        setTimeout(() => {
-          // If still here after 500ms, Google Maps not installed, use Universal Link
-          window.open(mapUrl, '_blank');
-        }, 500);
-        return;
-      } catch {
-        // Fallback to Universal Link
-        mapUrl = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+      if (userChoice) {
+        // Apple Maps with location name
+        window.location.href = `maps://?daddr=${latitude},${longitude}&q=${encodedName}`;
+      } else {
+        const googleOrWaze = confirm('OK = Google Maps\nCancel = Waze');
+        if (googleOrWaze) {
+          // Google Maps with location name
+          window.location.href = `comgooglemaps://?daddr=${encodedName}&center=${latitude},${longitude}`;
+          // Fallback to web if app not installed
+          setTimeout(() => {
+            window.open(`https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}&destination_place_id=${encodedName}`, '_blank');
+          }, 500);
+        } else {
+          // Waze with location name
+          window.location.href = `waze://?ll=${latitude},${longitude}&navigate=yes&q=${encodedName}`;
+          // Fallback to web if app not installed
+          setTimeout(() => {
+            window.open(`https://waze.com/ul?ll=${latitude},${longitude}&navigate=yes&q=${encodedName}`, '_blank');
+          }, 500);
+        }
       }
     } else if (isAndroid) {
-      // Android: Use geo URI scheme (opens default maps app)
-      mapUrl = `geo:${latitude},${longitude}?q=${latitude},${longitude}(${encodedLabel})`;
+      // Android: Show options for Google Maps or Waze
+      const userChoice = confirm(
+        `Open "${name}" in:\n\nOK = Google Maps\nCancel = Waze`
+      );
       
-      // Fallback to Google Maps URL if geo scheme fails
-      const fallbackUrl = `https://maps.google.com/?q=${latitude},${longitude}`;
-      
-      try {
-        window.location.href = mapUrl;
+      if (userChoice) {
+        // Google Maps with location name
+        window.location.href = `geo:${latitude},${longitude}?q=${encodedName}`;
+      } else {
+        // Waze with location name
+        window.location.href = `waze://?ll=${latitude},${longitude}&navigate=yes&q=${encodedName}`;
+        // Fallback to web if app not installed
         setTimeout(() => {
-          window.open(fallbackUrl, '_blank');
+          window.open(`https://waze.com/ul?ll=${latitude},${longitude}&navigate=yes&q=${encodedName}`, '_blank');
         }, 500);
-        return;
-      } catch {
-        mapUrl = fallbackUrl;
       }
     } else {
-      // Desktop: Google Maps with directions
-      mapUrl = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+      // Desktop: Open Google Maps with location name in new tab
+      window.open(`https://www.google.com/maps/search/?api=1&query=${encodedName}+${latitude},${longitude}`, '_blank');
     }
-    
-    // Open in new tab
-    window.open(mapUrl, '_blank');
   };
 
   return (
