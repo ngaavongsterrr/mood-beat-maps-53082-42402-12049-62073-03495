@@ -38,10 +38,8 @@ const SpotDetailsModal = ({ spot, onClose, highlightElement }: SpotDetailsModalP
   const categories: SpotCategory[] = ['peaceful', 'social', 'scenic'];
 
   const handleNavigate = () => {
-    const { latitude, longitude, name, address } = spot;
-    // Use full address if available, otherwise fall back to name
-    const locationQuery = address || name;
-    const encodedQuery = encodeURIComponent(locationQuery);
+    const { latitude, longitude, name } = spot;
+    const encodedName = encodeURIComponent(name);
     
     // Detect device type
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -50,50 +48,50 @@ const SpotDetailsModal = ({ spot, onClose, highlightElement }: SpotDetailsModalP
     if (isIOS) {
       // iOS: Show options for Apple Maps, Google Maps, or Waze
       const userChoice = confirm(
-        `Navigate to "${name}":\n\nOK = Apple Maps\nCancel = Choose Google Maps or Waze`
+        `Open "${name}" in:\n\nOK = Apple Maps\nCancel = Choose Google Maps or Waze`
       );
       
       if (userChoice) {
-        // Apple Maps - use address for better accuracy
-        window.location.href = `maps://?address=${encodedQuery}&ll=${latitude},${longitude}`;
+        // Apple Maps with location name
+        window.location.href = `maps://?daddr=${latitude},${longitude}&q=${encodedName}`;
       } else {
         const googleOrWaze = confirm('OK = Google Maps\nCancel = Waze');
         if (googleOrWaze) {
-          // Google Maps - use query parameter for accurate location
-          window.location.href = `comgooglemaps://?q=${encodedQuery}`;
+          // Google Maps with location name
+          window.location.href = `comgooglemaps://?daddr=${encodedName}&center=${latitude},${longitude}`;
           // Fallback to web if app not installed
           setTimeout(() => {
-            window.open(`https://www.google.com/maps/search/?api=1&query=${encodedQuery}`, '_blank');
+            window.open(`https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}&destination_place_id=${encodedName}`, '_blank');
           }, 500);
         } else {
-          // Waze - use query parameter
-          window.location.href = `waze://?q=${encodedQuery}&navigate=yes`;
+          // Waze with location name
+          window.location.href = `waze://?ll=${latitude},${longitude}&navigate=yes&q=${encodedName}`;
           // Fallback to web if app not installed
           setTimeout(() => {
-            window.open(`https://www.waze.com/ul?q=${encodedQuery}&navigate=yes`, '_blank');
+            window.open(`https://waze.com/ul?ll=${latitude},${longitude}&navigate=yes&q=${encodedName}`, '_blank');
           }, 500);
         }
       }
     } else if (isAndroid) {
       // Android: Show options for Google Maps or Waze
       const userChoice = confirm(
-        `Navigate to "${name}":\n\nOK = Google Maps\nCancel = Waze`
+        `Open "${name}" in:\n\nOK = Google Maps\nCancel = Waze`
       );
       
       if (userChoice) {
-        // Google Maps - use query for accuracy
-        window.location.href = `geo:0,0?q=${encodedQuery}`;
+        // Google Maps with location name
+        window.location.href = `geo:${latitude},${longitude}?q=${encodedName}`;
       } else {
-        // Waze - use query parameter
-        window.location.href = `waze://?q=${encodedQuery}&navigate=yes`;
+        // Waze with location name
+        window.location.href = `waze://?ll=${latitude},${longitude}&navigate=yes&q=${encodedName}`;
         // Fallback to web if app not installed
         setTimeout(() => {
-          window.open(`https://www.waze.com/ul?q=${encodedQuery}&navigate=yes`, '_blank');
+          window.open(`https://waze.com/ul?ll=${latitude},${longitude}&navigate=yes&q=${encodedName}`, '_blank');
         }, 500);
       }
     } else {
-      // Desktop: Open Google Maps with address query
-      window.open(`https://www.google.com/maps/search/?api=1&query=${encodedQuery}`, '_blank');
+      // Desktop: Open Google Maps with location name in new tab
+      window.open(`https://www.google.com/maps/search/?api=1&query=${encodedName}+${latitude},${longitude}`, '_blank');
     }
   };
 
