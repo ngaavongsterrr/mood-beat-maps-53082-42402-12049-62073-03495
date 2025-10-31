@@ -62,6 +62,14 @@ export const useTutorial = () => {
   }, [currentStep, completedSteps, tutorialActive]);
 
   const completeStep = useCallback((step: TutorialStep) => {
+    console.log('Completing tutorial step:', step, 'Current step:', currentStep);
+    
+    // Only complete if this is the current step
+    if (step !== currentStep) {
+      console.log('Ignoring completion - not current step');
+      return;
+    }
+
     setCompletedSteps(prev => {
       if (prev.includes(step)) return prev;
       return [...prev, step];
@@ -80,15 +88,20 @@ export const useTutorial = () => {
     ];
 
     const currentIndex = stepOrder.indexOf(step);
+    console.log('Advancing from index:', currentIndex);
+    
     if (currentIndex < stepOrder.length - 1) {
-      setCurrentStep(stepOrder[currentIndex + 1]);
+      const nextStep = stepOrder[currentIndex + 1];
+      console.log('Setting next step:', nextStep);
+      setCurrentStep(nextStep);
     } else {
       // All steps completed
+      console.log('Tutorial completed');
       setCurrentStep(null);
       setTutorialActive(false);
       localStorage.setItem(TUTORIAL_COMPLETED_KEY, 'true');
     }
-  }, []);
+  }, [currentStep]);
 
   const dismissCurrentStep = useCallback(() => {
     if (currentStep) {
