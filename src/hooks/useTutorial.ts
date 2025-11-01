@@ -74,38 +74,35 @@ export const useTutorial = () => {
       if (prev.includes(step)) return prev;
       return [...prev, step];
     });
-
-    // Auto-advance to next step
-    const stepOrder: TutorialStep[] = [
-      'mode-toggle',
-      'location-filter',
-      'location-pins',
-      'playlist-tab',
-      'spotify-open',
-      'mood-visualizer',
-      'mood-summary',
-      'journal-tab'
-    ];
-
-    const currentIndex = stepOrder.indexOf(step);
-    console.log('Advancing from index:', currentIndex);
-    
-    if (currentIndex < stepOrder.length - 1) {
-      const nextStep = stepOrder[currentIndex + 1];
-      console.log('Setting next step:', nextStep);
-      setCurrentStep(nextStep);
-    } else {
-      // All steps completed
-      console.log('Tutorial completed');
-      setCurrentStep(null);
-      setTutorialActive(false);
-      localStorage.setItem(TUTORIAL_COMPLETED_KEY, 'true');
-    }
   }, [currentStep]);
 
   const dismissCurrentStep = useCallback(() => {
     if (currentStep) {
       completeStep(currentStep);
+      
+      // Advance to next step when user dismisses
+      const stepOrder: TutorialStep[] = [
+        'mode-toggle',
+        'location-filter',
+        'location-pins',
+        'playlist-tab',
+        'spotify-open',
+        'mood-visualizer',
+        'mood-summary',
+        'journal-tab'
+      ];
+
+      const currentIndex = stepOrder.indexOf(currentStep);
+      
+      if (currentIndex < stepOrder.length - 1) {
+        const nextStep = stepOrder[currentIndex + 1];
+        setCurrentStep(nextStep);
+      } else {
+        // All steps completed
+        setCurrentStep(null);
+        setTutorialActive(false);
+        localStorage.setItem(TUTORIAL_COMPLETED_KEY, 'true');
+      }
     }
   }, [currentStep, completeStep]);
 
