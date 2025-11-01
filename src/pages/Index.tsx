@@ -4,6 +4,8 @@ import JournalView from '@/components/JournalView';
 import ModeToggle from '@/components/ModeToggle';
 import TutorialGuide from '@/components/TutorialGuide';
 import { useTutorial } from '@/hooks/useTutorial';
+import { Button } from '@/components/ui/button';
+import { HelpCircle } from 'lucide-react';
 
 const Index = () => {
   const [mode, setMode] = useState<'campus' | 'nationwide' | 'global' | 'journal'>('campus');
@@ -14,6 +16,7 @@ const Index = () => {
     completeStep, 
     dismissCurrentStep, 
     skipAllSteps,
+    startTutorial,
     highlightElement 
   } = useTutorial();
 
@@ -124,6 +127,17 @@ const Index = () => {
           />
         )}
       </div>
+
+      {/* Help Button */}
+      <Button
+        onClick={startTutorial}
+        size="icon"
+        variant="outline"
+        className="fixed top-4 right-4 z-50 rounded-full shadow-lg bg-card/95 backdrop-blur-sm hover:bg-card"
+        aria-label="Start tutorial"
+      >
+        <HelpCircle className="h-5 w-5" />
+      </Button>
 
       {/* Mode Toggle with tutorial highlight */}
       <div className={highlightElement('mode-toggle') ? 'tutorial-highlight' : ''}>

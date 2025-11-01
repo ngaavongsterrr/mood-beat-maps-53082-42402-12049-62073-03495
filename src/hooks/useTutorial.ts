@@ -37,16 +37,15 @@ export const useTutorial = () => {
         const progress: TutorialProgress = JSON.parse(saved);
         setCompletedSteps(progress.completedSteps || []);
         setCurrentStep(progress.currentStep);
-        setTutorialActive(true);
+        // Don't auto-start, wait for user to click help
+        setTutorialActive(false);
       } catch {
-        // Invalid data, start fresh
-        setCurrentStep('mode-toggle');
-        setTutorialActive(true);
+        // Invalid data, don't auto-start
+        setTutorialActive(false);
       }
     } else {
-      // First time user
-      setCurrentStep('mode-toggle');
-      setTutorialActive(true);
+      // First time user - don't auto-start
+      setTutorialActive(false);
     }
   }, []);
 
@@ -120,6 +119,12 @@ export const useTutorial = () => {
     setTutorialActive(true);
   }, []);
 
+  const startTutorial = useCallback(() => {
+    setCurrentStep('mode-toggle');
+    setTutorialActive(true);
+    setCompletedSteps([]);
+  }, []);
+
   const highlightElement = useCallback((step: TutorialStep) => {
     return tutorialActive && currentStep === step;
   }, [tutorialActive, currentStep]);
@@ -132,6 +137,7 @@ export const useTutorial = () => {
     dismissCurrentStep,
     skipAllSteps,
     resetTutorial,
+    startTutorial,
     highlightElement
   };
 };
