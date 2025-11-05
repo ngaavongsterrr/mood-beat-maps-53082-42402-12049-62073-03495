@@ -13,10 +13,19 @@ interface SpotDetailsModalProps {
   onClose: () => void;
 }
 
+const HELP_CLICKED_SPOT_KEY = 'help-spot-details-clicked';
+
 const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
   const [selectedPlaylistCategory, setSelectedPlaylistCategory] = useState<SpotCategory | null>(null);
   const [playlistOpened, setPlaylistOpened] = useState(false);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+  const [showHelpHighlight, setShowHelpHighlight] = useState(false);
+  
+  // Check if help icon should be highlighted
+  useEffect(() => {
+    const hasClicked = localStorage.getItem(HELP_CLICKED_SPOT_KEY);
+    setShowHelpHighlight(!hasClicked);
+  }, []);
   
   // Clear previous location data when a new location is selected
   useEffect(() => {
@@ -110,8 +119,14 @@ const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setIsTutorialOpen(true)}
-              className="bg-background/80 backdrop-blur-sm hover:bg-background/90"
+              onClick={() => {
+                setIsTutorialOpen(true);
+                setShowHelpHighlight(false);
+                localStorage.setItem(HELP_CLICKED_SPOT_KEY, 'true');
+              }}
+              className={`bg-background/80 backdrop-blur-sm hover:bg-background/90 ${
+                showHelpHighlight ? 'help-icon-pulse' : ''
+              }`}
               aria-label="Open help guide"
             >
               <HelpCircle className="h-4 w-4" />
