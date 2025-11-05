@@ -196,18 +196,12 @@ const MapView = ({ selectedCategory, onCategoryChange, mapMode, helpButton }: Ma
 
   return (
     <div className="relative h-full w-full">
-      {/* Help Button above Filter Bar */}
-      {helpButton && (
-        <div className="absolute top-4 right-4 z-30">
-          {helpButton}
-        </div>
-      )}
-
-      {/* Filter Bar */}
+      {/* Filter Bar with integrated help button */}
       <div className="absolute top-0 left-0 right-0 z-20">
         <FilterBar 
           selectedCategory={selectedCategory} 
-          onCategoryChange={onCategoryChange} 
+          onCategoryChange={onCategoryChange}
+          helpButton={helpButton}
         />
       </div>
 

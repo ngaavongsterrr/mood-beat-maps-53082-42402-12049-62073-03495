@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { X, Music, Sparkles, Navigation, Plus } from 'lucide-react';
+import { X, Music, Sparkles, Navigation, Plus, HelpCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { type Spot, getCategoryLabel, type SpotCategory, type Playlist } from '@/data/spots';
 import MoodVisualizer from './MoodVisualizer';
+import SpotDetailsTutorial from './SpotDetailsTutorial';
 
 interface SpotDetailsModalProps {
   spot: Spot;
@@ -15,6 +16,7 @@ interface SpotDetailsModalProps {
 const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
   const [selectedPlaylistCategory, setSelectedPlaylistCategory] = useState<SpotCategory | null>(null);
   const [playlistOpened, setPlaylistOpened] = useState(false);
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   
   // Clear previous location data when a new location is selected
   useEffect(() => {
@@ -104,14 +106,25 @@ const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
             alt={spot.name}
             className="w-full h-full object-cover"
           />
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm hover:bg-background/90"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="absolute top-2 right-2 flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsTutorialOpen(true)}
+              className="bg-background/80 backdrop-blur-sm hover:bg-background/90"
+              aria-label="Open help guide"
+            >
+              <HelpCircle className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="bg-background/80 backdrop-blur-sm hover:bg-background/90"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Content */}
@@ -251,6 +264,7 @@ const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
           </Tabs>
         </div>
       </DialogContent>
+      <SpotDetailsTutorial isOpen={isTutorialOpen} onClose={() => setIsTutorialOpen(false)} />
     </Dialog>
   );
 };
