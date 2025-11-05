@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { X, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export type TutorialStep = 
   | 'mode-toggle' 
@@ -13,10 +13,8 @@ export type TutorialStep =
   | 'journal-tab';
 
 interface TutorialGuideProps {
-  currentStep: TutorialStep | null;
-  onDismiss: () => void;
-  onComplete: () => void;
-  targetRef?: React.RefObject<HTMLElement>;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 const tutorialContent: Record<TutorialStep, { title: string; description: string }> = {
@@ -54,85 +52,75 @@ const tutorialContent: Record<TutorialStep, { title: string; description: string
   }
 };
 
-const TutorialGuide = ({ currentStep, onDismiss, onComplete }: TutorialGuideProps) => {
-  const [isVisible, setIsVisible] = useState(false);
+const tutorialSteps: { step: TutorialStep; content: typeof tutorialContent[TutorialStep] }[] = [
+  { step: 'mode-toggle', content: tutorialContent['mode-toggle'] },
+  { step: 'location-filter', content: tutorialContent['location-filter'] },
+  { step: 'location-pins', content: tutorialContent['location-pins'] },
+  { step: 'playlist-tab', content: tutorialContent['playlist-tab'] },
+  { step: 'spotify-open', content: tutorialContent['spotify-open'] },
+  { step: 'mood-visualizer', content: tutorialContent['mood-visualizer'] },
+  { step: 'mood-summary', content: tutorialContent['mood-summary'] },
+  { step: 'journal-tab', content: tutorialContent['journal-tab'] },
+];
 
-  useEffect(() => {
-    if (currentStep) {
-      // Fade in
-      setTimeout(() => setIsVisible(true), 50);
-    } else {
-      setIsVisible(false);
-    }
-  }, [currentStep]);
-
-  if (!currentStep) return null;
-
-  const content = tutorialContent[currentStep];
-
-  const handleDismiss = () => {
-    setIsVisible(false);
-    setTimeout(onDismiss, 250);
-  };
-
-  const handleSkipAll = () => {
-    setIsVisible(false);
-    setTimeout(onComplete, 250);
-  };
+const TutorialGuide = ({ isOpen, onClose }: TutorialGuideProps) => {
+  if (!isOpen) return null;
 
   return (
-    <div
-      className={`fixed inset-0 z-[9999] flex items-center justify-center p-4 transition-opacity duration-250 ease-in-out ${
-        isVisible ? 'opacity-100' : 'opacity-0'
-      }`}
-    >
-      {/* Backdrop - blocks all interactions */}
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-fade-in">
+      {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-background/80 backdrop-blur-sm" 
-        onClick={handleDismiss}
+        onClick={onClose}
       />
       
-      {/* Tutorial pop-up */}
-      <div
-        className={`relative max-w-md w-full bg-card/95 backdrop-blur-md rounded-2xl shadow-2xl border border-border p-6 transition-all duration-250 ease-in-out ${
-          isVisible ? 'scale-100' : 'scale-95'
-        }`}
-      >
-        {/* Close button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-4 right-4 h-8 w-8"
-          onClick={handleDismiss}
-          aria-label="Dismiss tutorial step"
-        >
-          <X className="h-4 w-4" />
-        </Button>
+      {/* Tutorial list dialog */}
+      <div className="relative max-w-2xl w-full max-h-[80vh] bg-card/95 backdrop-blur-md rounded-2xl shadow-2xl border border-border animate-scale-in">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <h2 className="text-2xl font-semibold text-foreground">
+            How to Use This App
+          </h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={onClose}
+            aria-label="Close tutorial"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
 
         {/* Content */}
-        <div className="pr-8">
-          <h3 className="text-xl font-semibold text-foreground mb-2">
-            {content.title}
-          </h3>
-          <p className="text-muted-foreground leading-relaxed mb-6">
-            {content.description}
-          </p>
-
-          {/* Actions */}
-          <div className="flex gap-3">
-            <Button
-              onClick={handleDismiss}
-              className="flex-1"
-            >
-              Got it
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleSkipAll}
-            >
-              Skip All
-            </Button>
+        <ScrollArea className="h-full max-h-[calc(80vh-140px)]">
+          <div className="p-6 space-y-4">
+            {tutorialSteps.map(({ content }, index) => (
+              <div
+                key={index}
+                className="flex gap-4 p-4 rounded-lg bg-accent/50 hover:bg-accent/70 transition-colors"
+              >
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm">
+                  {index + 1}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-foreground mb-1">
+                    {content.title}
+                  </h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {content.description}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
+        </ScrollArea>
+
+        {/* Footer */}
+        <div className="p-6 border-t border-border">
+          <Button onClick={onClose} className="w-full">
+            Got it, let's start!
+          </Button>
         </div>
       </div>
     </div>

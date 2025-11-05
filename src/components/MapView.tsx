@@ -8,10 +8,10 @@ interface MapViewProps {
   selectedCategory: string | null;
   onCategoryChange: (category: string | null) => void;
   mapMode: 'campus' | 'nationwide' | 'global';
-  highlightElement?: (step: string) => boolean;
+  helpButton?: React.ReactNode;
 }
 
-const MapView = ({ selectedCategory, onCategoryChange, mapMode, highlightElement }: MapViewProps) => {
+const MapView = ({ selectedCategory, onCategoryChange, mapMode, helpButton }: MapViewProps) => {
   const [selectedSpot, setSelectedSpot] = useState<Spot | null>(null);
   const [userLocationSpots, setUserLocationSpots] = useState<Spot[]>([]);
 
@@ -196,8 +196,15 @@ const MapView = ({ selectedCategory, onCategoryChange, mapMode, highlightElement
 
   return (
     <div className="relative h-full w-full">
+      {/* Help Button above Filter Bar */}
+      {helpButton && (
+        <div className="absolute top-4 right-4 z-30">
+          {helpButton}
+        </div>
+      )}
+
       {/* Filter Bar */}
-      <div className={`absolute top-0 left-0 right-0 z-20 ${highlightElement?.('location-filter') ? 'tutorial-highlight' : ''}`}>
+      <div className="absolute top-0 left-0 right-0 z-20">
         <FilterBar 
           selectedCategory={selectedCategory} 
           onCategoryChange={onCategoryChange} 
@@ -240,7 +247,7 @@ const MapView = ({ selectedCategory, onCategoryChange, mapMode, highlightElement
               return (
                 <button
                   key={spot.id}
-                  className={`absolute transform -translate-x-1/2 -translate-y-full group ${highlightElement?.('location-pins') ? 'tutorial-highlight rounded-full' : ''}`}
+                  className="absolute transform -translate-x-1/2 -translate-y-full group"
                   onClick={() => {
                     setSelectedSpot(spot);
                     window.dispatchEvent(new CustomEvent('tutorial-pin-click'));
@@ -273,7 +280,6 @@ const MapView = ({ selectedCategory, onCategoryChange, mapMode, highlightElement
         <SpotDetailsModal
           spot={selectedSpot}
           onClose={() => setSelectedSpot(null)}
-          highlightElement={highlightElement}
         />
       )}
     </div>

@@ -10,10 +10,9 @@ import MoodVisualizer from './MoodVisualizer';
 interface SpotDetailsModalProps {
   spot: Spot;
   onClose: () => void;
-  highlightElement?: (step: string) => boolean;
 }
 
-const SpotDetailsModal = ({ spot, onClose, highlightElement }: SpotDetailsModalProps) => {
+const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
   const [selectedPlaylistCategory, setSelectedPlaylistCategory] = useState<SpotCategory | null>(null);
   const [playlistOpened, setPlaylistOpened] = useState(false);
   
@@ -185,7 +184,7 @@ const SpotDetailsModal = ({ spot, onClose, highlightElement }: SpotDetailsModalP
               </div>
 
               {/* Spotify Playlists */}
-              <div className={`space-y-4 ${highlightElement?.('playlist-tab') ? 'tutorial-highlight rounded-lg' : ''}`}>
+              <div className="space-y-4">
                 {filteredPlaylists.map((playlist) => (
                   <div key={playlist.id} className="space-y-2 relative group">
                     <div className="flex items-center justify-between">
@@ -193,7 +192,7 @@ const SpotDetailsModal = ({ spot, onClose, highlightElement }: SpotDetailsModalP
                       <Button
                         size="sm"
                         variant="ghost"
-                        className={`gap-2 opacity-0 group-hover:opacity-100 transition-opacity ${highlightElement?.('spotify-open') ? 'tutorial-highlight' : ''}`}
+                        className="gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={() => {
                           // Store exact playlist data for accurate syncing with its specific category
                           localStorage.setItem('selectedPlaylistCategory', playlist.category);
@@ -246,7 +245,7 @@ const SpotDetailsModal = ({ spot, onClose, highlightElement }: SpotDetailsModalP
 
             <TabsContent value="visualizer" className="mt-4">
               <div className="h-[400px]">
-                <MoodVisualizer category={spot.category} isPlaying={true} highlightElement={highlightElement} />
+                <MoodVisualizer category={spot.category} isPlaying={true} />
               </div>
             </TabsContent>
           </Tabs>

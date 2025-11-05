@@ -148,6 +148,24 @@ All colors MUST be HSL.
     animation: glow-warm 2s ease-in-out infinite;
   }
 
+  /* Help icon pulse animation */
+  @keyframes help-pulse {
+    0%, 100% { 
+      box-shadow: 0 0 0 0 hsl(0 70% 50% / 0.7),
+                  0 0 0 0 hsl(0 70% 50% / 0.4);
+    }
+    50% { 
+      box-shadow: 0 0 0 8px hsl(0 70% 50% / 0.4),
+                  0 0 0 16px hsl(0 70% 50% / 0.2);
+    }
+  }
+
+  .help-icon-pulse {
+    position: relative;
+    animation: help-pulse 2s ease-in-out infinite;
+    border: 2px solid hsl(0 70% 50%);
+  }
+
   /* Tutorial highlight glow */
   @keyframes tutorial-glow {
     0%, 100% { 

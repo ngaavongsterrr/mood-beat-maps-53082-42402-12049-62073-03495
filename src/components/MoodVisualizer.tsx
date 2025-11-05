@@ -11,7 +11,6 @@ import html2canvas from 'html2canvas';
 interface MoodVisualizerProps {
   category: SpotCategory;
   isPlaying?: boolean;
-  highlightElement?: (step: string) => boolean;
 }
 
 type EmotionType = 'love' | 'happy' | 'content' | 'disappointed' | 'sad' | 'angry' | 'neutral' | 'curious';
@@ -116,7 +115,7 @@ const stagePrompts = {
   after: "How well does this playlist match the location's atmosphere?"
 };
 
-const MoodVisualizer = ({ category, isPlaying = true, highlightElement }: MoodVisualizerProps) => {
+const MoodVisualizer = ({ category, isPlaying = true }: MoodVisualizerProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [showOverlay, setShowOverlay] = useState(false);
   const [currentStage, setCurrentStage] = useState<MoodStage>('before');
@@ -714,7 +713,7 @@ const MoodVisualizer = ({ category, isPlaying = true, highlightElement }: MoodVi
 
       <canvas
         ref={canvasRef}
-        className={`w-full h-full cursor-pointer ${highlightElement?.('mood-visualizer') ? 'tutorial-highlight rounded-lg' : ''}`}
+        className="w-full h-full cursor-pointer"
         onClick={handleCanvasClick}
       />
 
@@ -885,7 +884,7 @@ const MoodVisualizer = ({ category, isPlaying = true, highlightElement }: MoodVi
                       Close
                     </Button>
                     <Button
-                      className={`flex-1 gap-2 ${highlightElement?.('mood-summary') ? 'tutorial-highlight' : ''}`}
+                      className="flex-1 gap-2"
                       onClick={handleSaveToJournal}
                     >
                       <Save className="w-4 h-4" />
