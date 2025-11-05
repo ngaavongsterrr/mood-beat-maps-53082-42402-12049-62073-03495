@@ -1,5 +1,6 @@
 import { X, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export type TutorialStep = 
@@ -17,38 +18,46 @@ interface TutorialGuideProps {
   onClose: () => void;
 }
 
-const tutorialContent: Record<TutorialStep, { title: string; description: string }> = {
+const tutorialContent: Record<TutorialStep, { title: string; description: string; tab: string }> = {
   'mode-toggle': {
     title: 'Navigate to Your Mode',
-    description: 'Navigate to the mode of your current location (campus: NHL Stenden Leeuwarden, Netherlands, Global) to show outdoor spots in your area.'
+    description: 'Navigate to the mode of your current location (campus: NHL Stenden Leeuwarden, Netherlands, Global) to show outdoor spots in your area.',
+    tab: 'Map View'
   },
   'location-filter': {
     title: 'Select Location Category',
-    description: 'Select a location category to display location pins that match your preference (optional).'
+    description: 'Select a location category to display location pins that match your preference (optional).',
+    tab: 'Map View'
   },
   'location-pins': {
     title: 'Tap Location Pins',
-    description: 'Tap an outdoor location pin to view spot details.'
+    description: 'Tap an outdoor location pin to view spot details.',
+    tab: 'Map View'
   },
   'playlist-tab': {
     title: 'Preview Playlists',
-    description: 'Preview Spotify recommended playlists by pressing the play button or selecting a track.'
+    description: 'Preview Spotify recommended playlists by pressing the play button or selecting a track.',
+    tab: 'Playlists Tab'
   },
   'spotify-open': {
     title: 'Open in Spotify',
-    description: 'Tap the Spotify logo or +Open in Spotify to open your playlist. Then return here to continue.'
+    description: 'Tap the Spotify logo or +Open in Spotify to open your playlist. Then return here to continue.',
+    tab: 'Playlists Tab'
   },
   'mood-visualizer': {
     title: 'Record Your Mood',
-    description: 'Select the playlist category you\'re playing, then tap the animated mood interface to start recording your mood.'
+    description: 'Select the playlist category you\'re playing, then tap the animated mood interface to start recording your mood.',
+    tab: 'Mood Visualizer Tab'
   },
   'mood-summary': {
     title: 'Save Your Journey',
-    description: 'Click Save Journey to add your entry to your journal.'
+    description: 'Click Save Journey to add your entry to your journal.',
+    tab: 'Mood Visualizer Tab'
   },
   'journal-tab': {
     title: 'Manage Your Entries',
-    description: 'Press Edit to adjust details like playlist name or location; use the Photo button to download your summary as an image.'
+    description: 'Press Edit to adjust details like playlist name or location; use the Photo button to download your summary as an image.',
+    tab: 'Journal Mode'
   }
 };
 
@@ -104,9 +113,14 @@ const TutorialGuide = ({ isOpen, onClose }: TutorialGuideProps) => {
                   {index + 1}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-foreground mb-1">
-                    {content.title}
-                  </h3>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-lg font-semibold text-foreground">
+                      {content.title}
+                    </h3>
+                    <Badge variant="outline" className="text-xs">
+                      {content.tab}
+                    </Badge>
+                  </div>
                   <p className="text-muted-foreground text-sm leading-relaxed">
                     {content.description}
                   </p>

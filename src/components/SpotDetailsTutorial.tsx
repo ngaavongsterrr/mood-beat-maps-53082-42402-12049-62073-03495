@@ -45,17 +45,17 @@ const SpotDetailsTutorial = ({ isOpen, onClose }: SpotDetailsTutorialProps) => {
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-fade-in"
-      onClick={onClose}
-    >
-      {/* Tutorial dialog */}
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-fade-in">
+      {/* Backdrop */}
       <div 
-        className="relative w-full max-w-2xl max-h-[85vh] bg-card rounded-2xl shadow-2xl border border-border flex flex-col animate-scale-in"
-        onClick={(e) => e.stopPropagation()}
-      >
+        className="absolute inset-0 bg-background/80 backdrop-blur-sm" 
+        onClick={onClose}
+      />
+      
+      {/* Tutorial dialog */}
+      <div className="relative max-w-2xl w-full max-h-[80vh] bg-card/95 backdrop-blur-md rounded-2xl shadow-2xl border border-border animate-scale-in">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border shrink-0">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <h2 className="text-2xl font-semibold text-foreground">
             Spot Details Guide
           </h2>
@@ -71,7 +71,7 @@ const SpotDetailsTutorial = ({ isOpen, onClose }: SpotDetailsTutorialProps) => {
         </div>
 
         {/* Content */}
-        <ScrollArea className="flex-1 overflow-auto">
+        <ScrollArea className="h-full max-h-[calc(80vh-140px)]">
           <div className="p-6 space-y-4">
             {tutorialSteps.map((step, index) => (
               <div
@@ -81,8 +81,8 @@ const SpotDetailsTutorial = ({ isOpen, onClose }: SpotDetailsTutorialProps) => {
                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm">
                   {index + 1}
                 </div>
-                <div className="flex-1 space-y-1">
-                  <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
                     <h3 className="text-lg font-semibold text-foreground">
                       {step.title}
                     </h3>
@@ -100,7 +100,7 @@ const SpotDetailsTutorial = ({ isOpen, onClose }: SpotDetailsTutorialProps) => {
         </ScrollArea>
 
         {/* Footer */}
-        <div className="p-6 border-t border-border shrink-0">
+        <div className="p-6 border-t border-border">
           <Button onClick={onClose} className="w-full">
             Got it!
           </Button>
