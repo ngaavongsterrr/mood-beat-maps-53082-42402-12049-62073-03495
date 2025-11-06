@@ -50,7 +50,6 @@ const SpotDetailsTutorial = ({ isOpen, onClose }: SpotDetailsTutorialProps) => {
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-background/80 backdrop-blur-sm" 
-        onClick={onClose}
       />
       
       {/* Tutorial dialog */}

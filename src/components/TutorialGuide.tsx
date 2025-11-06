@@ -2,6 +2,7 @@ import { X, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { createPortal } from 'react-dom';
 
 export type TutorialStep = 
   | 'mode-toggle' 
@@ -75,18 +76,17 @@ const tutorialSteps: { step: TutorialStep; content: typeof tutorialContent[Tutor
 const TutorialGuide = ({ isOpen, onClose }: TutorialGuideProps) => {
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-fade-in">
+  const tutorialElement = (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 animate-fade-in pointer-events-auto">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-background/80 backdrop-blur-sm" 
-        onClick={onClose}
       />
       
       {/* Tutorial list dialog */}
-      <div className="relative max-w-2xl w-full max-h-[80vh] bg-card/95 backdrop-blur-md rounded-2xl shadow-2xl border border-border animate-scale-in">
+      <div className="relative max-w-2xl w-full max-h-[80vh] flex flex-col bg-card/95 backdrop-blur-md rounded-2xl shadow-2xl border border-border animate-scale-in">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
+        <div className="flex items-center justify-between p-6 border-b border-border flex-shrink-0">
           <h2 className="text-2xl font-semibold text-foreground">
             How to Use This App
           </h2>
@@ -102,7 +102,7 @@ const TutorialGuide = ({ isOpen, onClose }: TutorialGuideProps) => {
         </div>
 
         {/* Content */}
-        <ScrollArea className="h-full max-h-[calc(80vh-140px)]">
+        <ScrollArea className="flex-1 overflow-auto">
           <div className="p-6 space-y-4">
             {tutorialSteps.map(({ content }, index) => (
               <div
@@ -131,7 +131,7 @@ const TutorialGuide = ({ isOpen, onClose }: TutorialGuideProps) => {
         </ScrollArea>
 
         {/* Footer */}
-        <div className="p-6 border-t border-border">
+        <div className="p-6 border-t border-border flex-shrink-0">
           <Button onClick={onClose} className="w-full">
             Got it, let's start!
           </Button>
@@ -139,6 +139,8 @@ const TutorialGuide = ({ isOpen, onClose }: TutorialGuideProps) => {
       </div>
     </div>
   );
+
+  return createPortal(tutorialElement, document.body);
 };
 
 export default TutorialGuide;
