@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { MapPin } from 'lucide-react';
 import { spots, getCategoryColor, type Spot } from '@/data/spots';
 import FilterBar from './FilterBar';
 import SpotDetailsModal from './SpotDetailsModal';
+import LeafletMap from './LeafletMap';
 
 interface MapViewProps {
   selectedCategory: string | null;
@@ -194,6 +194,30 @@ const MapView = ({ selectedCategory, onCategoryChange, mapMode, helpButton }: Ma
     ? displaySpots.filter(spot => spot.category === selectedCategory)
     : displaySpots;
 
+  // Calculate map center based on spots
+  const mapCenter: [number, number] = filteredSpots.length > 0
+    ? [
+        filteredSpots.reduce((sum, spot) => sum + spot.latitude, 0) / filteredSpots.length,
+        filteredSpots.reduce((sum, spot) => sum + spot.longitude, 0) / filteredSpots.length,
+      ]
+    : mapMode === 'campus'
+    ? [53.201370, 5.799130] // NHL Stenden Leeuwarden
+    : [52.3676, 4.9041]; // Amsterdam default
+
+  const mapZoom = mapMode === 'campus' ? 15 : mapMode === 'nationwide' ? 13 : 11;
+
+  // Convert spots to markers for the map
+  const markers = filteredSpots.map(spot => ({
+    id: spot.id,
+    position: [spot.latitude, spot.longitude] as [number, number],
+    name: spot.name,
+    color: getCategoryColor(spot.category),
+    onClick: () => {
+      setSelectedSpot(spot);
+      window.dispatchEvent(new CustomEvent('tutorial-pin-click'));
+    },
+  }));
+
   return (
     <div className="relative h-full w-full">
       {/* Filter Bar with integrated help button */}
@@ -206,67 +230,12 @@ const MapView = ({ selectedCategory, onCategoryChange, mapMode, helpButton }: Ma
       </div>
 
       {/* Map Container */}
-      <div className="absolute inset-0 bg-muted">
-        {/* Simple map representation with spots */}
-        <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
-          {/* Background grid pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <svg width="100%" height="100%">
-              <defs>
-                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                  <circle cx="2" cy="2" r="1" fill="currentColor" />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#grid)" />
-            </svg>
-          </div>
-
-          {/* Spots as pins */}
-          <div className="relative w-full max-w-4xl h-full max-h-[600px] mx-auto">
-            {filteredSpots.map((spot, index) => {
-              // Position pins in a visually pleasing layout (supports up to 9 pins)
-              const positions = [
-                { top: '18%', left: '28%' },
-                { top: '25%', left: '68%' },
-                { top: '42%', left: '45%' },
-                { top: '48%', left: '78%' },
-                { top: '62%', left: '22%' },
-                { top: '68%', left: '62%' },
-                { top: '35%', left: '85%' },
-                { top: '75%', left: '40%' },
-                { top: '55%', left: '52%' },
-              ];
-              const position = positions[index % positions.length] || { top: '50%', left: '50%' };
-
-              return (
-                <button
-                  key={spot.id}
-                  className="absolute transform -translate-x-1/2 -translate-y-full group"
-                  onClick={() => {
-                    setSelectedSpot(spot);
-                    window.dispatchEvent(new CustomEvent('tutorial-pin-click'));
-                  }}
-                  style={position}
-                  aria-label={`View ${spot.name}`}
-                >
-                  <div className="relative">
-                    <MapPin
-                      className="w-10 h-10 drop-shadow-lg transition-transform duration-200 group-hover:scale-110 group-active:scale-95"
-                      fill={getCategoryColor(spot.category)}
-                      stroke="white"
-                      strokeWidth={2}
-                    />
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 whitespace-nowrap">
-                      <span className="text-xs font-medium bg-background/90 backdrop-blur-sm px-2 py-1 rounded shadow-md opacity-0 group-hover:opacity-100 transition-opacity">
-                        {spot.name}
-                      </span>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+      <div className="absolute inset-0">
+        <LeafletMap
+          center={mapCenter}
+          zoom={mapZoom}
+          markers={markers}
+        />
       </div>
 
       {/* Spot Details Modal */}

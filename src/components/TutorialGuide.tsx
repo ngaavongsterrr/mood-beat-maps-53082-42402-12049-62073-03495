@@ -2,7 +2,9 @@ import { X, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Progress } from '@/components/ui/progress';
 import { createPortal } from 'react-dom';
+import { useTutorial } from '@/hooks/useTutorial';
 
 export type TutorialStep = 
   | 'mode-toggle' 
@@ -74,19 +76,36 @@ const tutorialSteps: { step: TutorialStep; content: typeof tutorialContent[Tutor
 ];
 
 const TutorialGuide = ({ isOpen, onClose }: TutorialGuideProps) => {
+  const { completedSteps } = useTutorial();
+  
   if (!isOpen) return null;
 
+  // Calculate progress
+  const completedCount = tutorialSteps.filter(({ step }) => completedSteps.includes(step)).length;
+  const progressPercentage = (completedCount / tutorialSteps.length) * 100;
+
   const tutorialElement = (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 animate-fade-in pointer-events-auto">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 animate-fade-in">
+      {/* Backdrop - no pointer events to prevent accidental close */}
       <div 
-        className="absolute inset-0 bg-background/80 backdrop-blur-sm" 
+        className="absolute inset-0 bg-background/80 backdrop-blur-sm pointer-events-none" 
       />
       
       {/* Tutorial list dialog */}
-      <div className="relative max-w-2xl w-full max-h-[80vh] flex flex-col bg-card/95 backdrop-blur-md rounded-2xl shadow-2xl border border-border animate-scale-in">
+      <div className="relative max-w-2xl w-full max-h-[80vh] flex flex-col bg-card/95 backdrop-blur-md rounded-2xl shadow-2xl border border-border animate-scale-in pointer-events-auto">
+        {/* Progress Bar */}
+        <div className="px-6 pt-4 pb-2 flex-shrink-0">
+          <div className="space-y-1">
+            <div className="flex justify-between items-center text-xs text-muted-foreground">
+              <span>Progress</span>
+              <span>{completedCount} of {tutorialSteps.length} completed</span>
+            </div>
+            <Progress value={progressPercentage} className="h-2" />
+          </div>
+        </div>
+
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border flex-shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
           <h2 className="text-2xl font-semibold text-foreground">
             How to Use This App
           </h2>
@@ -104,29 +123,37 @@ const TutorialGuide = ({ isOpen, onClose }: TutorialGuideProps) => {
         {/* Content */}
         <ScrollArea className="flex-1 overflow-auto">
           <div className="p-6 space-y-4">
-            {tutorialSteps.map(({ content }, index) => (
-              <div
-                key={index}
-                className="flex gap-4 p-4 rounded-lg bg-accent/50 hover:bg-accent/70 transition-colors"
-              >
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm">
-                  {index + 1}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-lg font-semibold text-foreground">
-                      {content.title}
-                    </h3>
-                    <Badge variant="outline" className="text-xs">
-                      {content.tab}
-                    </Badge>
+            {tutorialSteps.map(({ step, content }, index) => {
+              const isCompleted = completedSteps.includes(step);
+              return (
+                <div
+                  key={index}
+                  className="flex gap-4 p-4 rounded-lg bg-accent/50 hover:bg-accent/70 transition-colors border-2 border-accent/30"
+                >
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm shadow-lg">
+                    {index + 1}
                   </div>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {content.description}
-                  </p>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-lg font-semibold text-foreground">
+                        {content.title}
+                      </h3>
+                      <Badge variant="outline" className="text-xs">
+                        {content.tab}
+                      </Badge>
+                      {isCompleted && (
+                        <Badge className="text-xs bg-green-600 text-white">
+                          ✓ Done
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      {content.description}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </ScrollArea>
 
