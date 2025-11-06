@@ -124,12 +124,12 @@ const SpotDetailsModal = ({ spot, onClose }: SpotDetailsModalProps) => {
                 setShowHelpHighlight(false);
                 localStorage.setItem(HELP_CLICKED_SPOT_KEY, 'true');
               }}
-              className={`bg-background/80 backdrop-blur-sm hover:bg-background/90 ${
+              className={`rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90 ${
                 showHelpHighlight ? 'help-icon-pulse' : ''
               }`}
               aria-label="Open help guide"
             >
-              <HelpCircle className="h-4 w-4" />
+              <HelpCircle className={`h-5 w-5 ${showHelpHighlight ? 'font-bold' : ''}`} />
             </Button>
             <Button
               variant="ghost"

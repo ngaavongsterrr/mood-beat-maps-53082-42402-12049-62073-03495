@@ -2,6 +2,7 @@ import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { createPortal } from 'react-dom';
 
 interface SpotDetailsTutorialProps {
   isOpen: boolean;
@@ -44,8 +45,8 @@ const tutorialSteps = [
 const SpotDetailsTutorial = ({ isOpen, onClose }: SpotDetailsTutorialProps) => {
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-fade-in">
+  const tutorialContent = (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 animate-fade-in pointer-events-auto">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-background/80 backdrop-blur-sm" 
@@ -53,9 +54,9 @@ const SpotDetailsTutorial = ({ isOpen, onClose }: SpotDetailsTutorialProps) => {
       />
       
       {/* Tutorial dialog */}
-      <div className="relative max-w-2xl w-full max-h-[80vh] bg-card/95 backdrop-blur-md rounded-2xl shadow-2xl border border-border animate-scale-in">
+      <div className="relative max-w-2xl w-full max-h-[80vh] flex flex-col bg-card/95 backdrop-blur-md rounded-2xl shadow-2xl border border-border animate-scale-in">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
+        <div className="flex items-center justify-between p-6 border-b border-border flex-shrink-0">
           <h2 className="text-2xl font-semibold text-foreground">
             Spot Details Guide
           </h2>
@@ -71,7 +72,7 @@ const SpotDetailsTutorial = ({ isOpen, onClose }: SpotDetailsTutorialProps) => {
         </div>
 
         {/* Content */}
-        <ScrollArea className="h-full max-h-[calc(80vh-140px)]">
+        <ScrollArea className="flex-1 overflow-auto">
           <div className="p-6 space-y-4">
             {tutorialSteps.map((step, index) => (
               <div
@@ -100,7 +101,7 @@ const SpotDetailsTutorial = ({ isOpen, onClose }: SpotDetailsTutorialProps) => {
         </ScrollArea>
 
         {/* Footer */}
-        <div className="p-6 border-t border-border">
+        <div className="p-6 border-t border-border flex-shrink-0">
           <Button onClick={onClose} className="w-full">
             Got it!
           </Button>
@@ -108,6 +109,8 @@ const SpotDetailsTutorial = ({ isOpen, onClose }: SpotDetailsTutorialProps) => {
       </div>
     </div>
   );
+
+  return createPortal(tutorialContent, document.body);
 };
 
 export default SpotDetailsTutorial;
