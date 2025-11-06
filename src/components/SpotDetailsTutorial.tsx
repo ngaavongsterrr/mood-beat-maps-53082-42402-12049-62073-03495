@@ -2,60 +2,81 @@ import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Progress } from '@/components/ui/progress';
 import { createPortal } from 'react-dom';
+import { useTutorial, type TutorialStep } from '@/hooks/useTutorial';
 
 interface SpotDetailsTutorialProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const tutorialSteps = [
+// Steps 4-8 from the main map view tutorial
+const tutorialSteps: Array<{ step: TutorialStep; title: string; description: string; tab: string }> = [
   {
+    step: 'playlist-tab' as TutorialStep,
     title: 'Preview Playlists',
-    description: 'In the Playlists tab, preview Spotify recommended playlists by pressing the play button or selecting a track.',
+    description: 'Preview Spotify recommended playlists by pressing the play button or selecting a track.',
     tab: 'Playlists Tab'
   },
   {
-    title: 'Select & Open Playlist',
-    description: 'Choose a playlist that inspires you and tap "+Open in Spotify" to open it in your Spotify app. This will enable the Navigate to Location button and activate the Mood Visualizer.',
+    step: 'spotify-open' as TutorialStep,
+    title: 'Open in Spotify',
+    description: 'Tap the Spotify logo or +Open in Spotify to open your playlist. Then return here to continue.',
     tab: 'Playlists Tab'
   },
   {
-    title: 'Navigate to Location',
-    description: 'After opening a playlist, use the Navigate to Location button to open the spot in your GPS app (Apple Maps, Google Maps, or Waze).',
-    tab: 'Playlists Tab'
-  },
-  {
+    step: 'mood-visualizer' as TutorialStep,
     title: 'Record Your Mood',
-    description: 'Switch to the Mood Visualizer tab and tap the animated mood interface to start recording your current mood while listening to your selected playlist.',
+    description: 'Select the playlist category you\'re playing, then tap the animated mood interface to start recording your mood.',
     tab: 'Mood Visualizer Tab'
   },
   {
+    step: 'mood-summary' as TutorialStep,
     title: 'Save Your Journey',
-    description: 'Click Save Journey in the Mood Visualizer to add your entry to your journal.',
+    description: 'Click Save Journey to add your entry to your journal.',
     tab: 'Mood Visualizer Tab'
   },
   {
+    step: 'journal-tab' as TutorialStep,
     title: 'Manage Your Entries',
-    description: 'Switch to Journal mode to view all entries. Press Edit to adjust details like playlist name or location; use the Photo button to download your summary as an image.',
+    description: 'Press Edit to adjust details like playlist name or location; use the Photo button to download your summary as an image.',
     tab: 'Journal Mode'
   }
 ];
 
 const SpotDetailsTutorial = ({ isOpen, onClose }: SpotDetailsTutorialProps) => {
+  const { completedSteps } = useTutorial();
+  
   if (!isOpen) return null;
 
+  // Calculate progress based on completed steps (steps 4-8)
+  const relevantSteps = tutorialSteps.map(s => s.step);
+  const completedCount = relevantSteps.filter(step => completedSteps.includes(step)).length;
+  const progressPercentage = (completedCount / tutorialSteps.length) * 100;
+
   const tutorialContent = (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 animate-fade-in pointer-events-auto">
-      {/* Backdrop */}
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 animate-fade-in">
+      {/* Backdrop - no pointer events to prevent accidental close */}
       <div 
-        className="absolute inset-0 bg-background/80 backdrop-blur-sm" 
+        className="absolute inset-0 bg-background/80 backdrop-blur-sm pointer-events-none" 
       />
       
       {/* Tutorial dialog */}
-      <div className="relative max-w-2xl w-full max-h-[80vh] flex flex-col bg-card/95 backdrop-blur-md rounded-2xl shadow-2xl border border-border animate-scale-in">
+      <div className="relative max-w-2xl w-full max-h-[80vh] flex flex-col bg-card/95 backdrop-blur-md rounded-2xl shadow-2xl border border-border animate-scale-in pointer-events-auto">
+        {/* Progress Bar */}
+        <div className="px-6 pt-4 pb-2 flex-shrink-0">
+          <div className="space-y-1">
+            <div className="flex justify-between items-center text-xs text-muted-foreground">
+              <span>Progress</span>
+              <span>{completedCount} of {tutorialSteps.length} completed</span>
+            </div>
+            <Progress value={progressPercentage} className="h-2" />
+          </div>
+        </div>
+
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border flex-shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border flex-shrink-0">
           <h2 className="text-2xl font-semibold text-foreground">
             Spot Details Guide
           </h2>
@@ -73,29 +94,37 @@ const SpotDetailsTutorial = ({ isOpen, onClose }: SpotDetailsTutorialProps) => {
         {/* Content */}
         <ScrollArea className="flex-1 overflow-auto">
           <div className="p-6 space-y-4">
-            {tutorialSteps.map((step, index) => (
-              <div
-                key={index}
-                className="flex gap-4 p-4 rounded-lg bg-accent/50 hover:bg-accent/70 transition-colors"
-              >
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm">
-                  {index + 1}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-lg font-semibold text-foreground">
-                      {step.title}
-                    </h3>
-                    <Badge variant="outline" className="text-xs">
-                      {step.tab}
-                    </Badge>
+            {tutorialSteps.map((step, index) => {
+              const isCompleted = completedSteps.includes(step.step);
+              return (
+                <div
+                  key={index}
+                  className="flex gap-4 p-4 rounded-lg bg-orange-500/10 border-2 border-orange-500/30 hover:bg-orange-500/20 transition-colors"
+                >
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-orange-600 text-white flex items-center justify-center font-semibold text-sm shadow-lg">
+                    {index + 4}
                   </div>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {step.description}
-                  </p>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-lg font-semibold text-foreground">
+                        {step.title}
+                      </h3>
+                      <Badge variant="outline" className="text-xs border-orange-500/50 text-orange-700 dark:text-orange-400">
+                        {step.tab}
+                      </Badge>
+                      {isCompleted && (
+                        <Badge className="text-xs bg-green-600 text-white">
+                          ✓ Done
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      {step.description}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </ScrollArea>
 
